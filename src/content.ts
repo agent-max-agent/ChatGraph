@@ -25,7 +25,7 @@ function waitFor<T>(find: () => T | null | undefined | false, timeout = 12000): 
     });
     const timer = setTimeout(() => {
       observer.disconnect();
-      reject(new Error('页面未显示目标消息，请重试。'));
+      reject(new Error('targetMissing'));
     }, timeout);
     observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true });
   });
@@ -64,12 +64,12 @@ async function navigate(plan: NavigationPlan) {
   } else {
     const anchor = await locateMainMessage(plan.anchorId, plan.pathIds);
     const button = anchor.closest('[data-turn-key]')!.querySelector<HTMLButtonElement>('button[aria-label="See versions"]');
-    if (!button) throw new Error('此消息没有原生版本入口。');
+    if (!button) throw new Error('noVersions');
     button.click();
     await waitFor(() => document.querySelector('[aria-modal="true"] button[aria-label="Next version"]'));
     while (!messageElement(plan.matchId, true)) {
       const next = document.querySelector<HTMLButtonElement>('[aria-modal="true"] button[aria-label="Next version"]')!;
-      if (next.disabled) throw new Error('未找到对应历史版本。');
+      if (next.disabled) throw new Error('versionMissing');
       const before = document.querySelector<HTMLElement>('[aria-modal="true"]')!.innerText;
       next.click();
       await waitFor(() => document.querySelector<HTMLElement>('[aria-modal="true"]')!.innerText !== before);
@@ -89,13 +89,13 @@ async function navigate(plan: NavigationPlan) {
 
 chrome.runtime.onMessage.addListener((message: { type: string; plan: NavigationPlan }, sender, respond) => {
   if (message.type !== 'navigate') return;
-  navigate(message.plan).then(() => respond({ ok: true }), error => respond({ error: error.message }));
+  navigate(message.plan).then(() => respond({ ok: true }), (error: Error) => respond({ error: error.message }));
   return true;
 });
 
 chrome.runtime.sendMessage<CoordinatorMessage, NavigationReply>({ type: 'ready' }).then(result => {
   if (result.plan) return navigate(result.plan);
-}).catch(error => chrome.runtime.sendMessage({ type: 'navigationError', error: error.message }));
+}).catch((error: Error) => chrome.runtime.sendMessage({ type: 'navigationError', error: error.message }));
 
 function observeMessages() {
   let timer: ReturnType<typeof setTimeout>;

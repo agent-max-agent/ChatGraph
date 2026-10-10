@@ -3,7 +3,7 @@ import type { Conversation, MessageNode } from './types.js';
 export function readVisibleConversation(id: string): Conversation {
   const region = [...document.querySelectorAll<HTMLElement>('[aria-label="Conversation"]')]
     .find(element => element.checkVisibility({ checkVisibilityCSS: true }));
-  if (!region) return { id, title: '新分支草稿', nodes: [], activePath: [], currentNode: null, fork: null };
+  if (!region) return { id, title: '', titleKind: 'draft', nodes: [], activePath: [], currentNode: null, fork: null };
   const elements = [...region.querySelectorAll<HTMLElement>('[data-chatgpt-search-message-ids]')]
     .filter(element => element.checkVisibility({ checkVisibilityCSS: true }));
   const nodes: MessageNode[] = elements.map((element, index) => ({
@@ -20,5 +20,5 @@ export function readVisibleConversation(id: string): Conversation {
     id: forkElement.getAttribute('data-chatgpt-search-message-ids')!.split(' ')[0],
     branchSource: decodeURIComponent(new URL(sourceLink!.href).pathname.split('/').at(-1)!),
   } : null;
-  return { id, title: `${document.title} · 草稿`, nodes, activePath: nodes.map(node => node.id), currentNode: nodes.at(-1)?.id ?? null, fork };
+  return { id, title: document.title, titleKind: 'draft', nodes, activePath: nodes.map(node => node.id), currentNode: nodes.at(-1)?.id ?? null, fork };
 }

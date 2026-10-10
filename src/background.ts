@@ -91,7 +91,7 @@ class Coordinator {
         if (failure.status !== 404) throw error;
         const key = `conversation:${failure.conversationId}`;
         const saved = await chrome.storage.local.get<Record<string, Conversation>>(key);
-        const conversation = saved[key] ?? { id: failure.conversationId, title: '不可访问的对话', nodes: [], activePath: [], fork: null };
+        const conversation = saved[key] ?? { id: failure.conversationId, title: '', titleKind: 'unavailable', nodes: [], activePath: [], fork: null };
         await chrome.storage.local.set({ [key]: { ...conversation, unavailable: true } });
       }
       progress.cursor += 1;
@@ -110,7 +110,7 @@ class Coordinator {
     }
     const saved = await chrome.storage.local.get<Record<string, Conversation>>(`conversation:${conversationUuid}`);
     const conversation = saved[`conversation:${conversationUuid}`];
-    if (conversation.unavailable) throw new Error('此对话已删除或不可访问。');
+    if (conversation.unavailable) throw new Error('conversationUnavailable');
     const plan = navigationPlan(conversation, messageId);
     const tab = await chrome.tabs.get(tabId);
     await chrome.storage.session.set({ [`navigation:${tabId}`]: { conversationId: conversationUuid, ...plan } });
@@ -148,7 +148,7 @@ class Coordinator {
         await chrome.storage.session.set({ [`tab:${tabId}`]: state });
         return {};
       }
-      default: throw new Error('未知操作。');
+      default: throw new Error('unknownOperation');
     }
   }
 }
@@ -156,7 +156,7 @@ class Coordinator {
 const coordinator = new Coordinator();
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 chrome.runtime.onMessage.addListener((message: CoordinatorMessage, sender, respond) => {
-  coordinator.message(message, sender).then(respond, error => respond({ error: error.message }));
+  coordinator.message(message, sender).then(respond, (error: Error) => respond({ error: error.message }));
   return true;
 });
 const changed = (details: { frameId: number; tabId: number }) => {

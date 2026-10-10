@@ -1,0 +1,137 @@
+{
+  "extensionDescription": {
+    "message": "查看 ChatGPT 对话分支，点击消息回到对应的聊天记录。"
+  },
+  "actionTitle": {
+    "message": "打开 ChatGraph"
+  },
+  "refresh": {
+    "message": "刷新"
+  },
+  "branches": {
+    "message": "对话分支"
+  },
+  "openChat": {
+    "message": "请打开 ChatGPT 对话。"
+  },
+  "initialStatus": {
+    "message": "打开 ChatGPT 对话，查看分支。"
+  },
+  "draftStatus": {
+    "message": "这个分支还没保存，发送消息后会自动记录。"
+  },
+  "counts": {
+    "message": "$1 个对话 · $2 条消息"
+  },
+  "syncing": {
+    "message": " · 正在同步"
+  },
+  "rootHint": {
+    "message": "不同的首轮消息从这里展开"
+  },
+  "unavailable": {
+    "message": "无法访问"
+  },
+  "root": {
+    "message": "对话开始"
+  },
+  "rootSummary": {
+    "message": "首轮消息和后续分支"
+  },
+  "you": {
+    "message": "你"
+  },
+  "attachment": {
+    "message": "附件消息"
+  },
+  "indexProgress": {
+    "message": "已扫描 $1/$2 个对话"
+  },
+  "indexDone": {
+    "message": " · 完成"
+  },
+  "indexRunning": {
+    "message": " · 扫描中"
+  },
+  "indexPaused": {
+    "message": " · 已暂停"
+  },
+  "indexHint": {
+    "message": "扫描已有对话，找出历史分支。"
+  },
+  "indexPause": {
+    "message": "暂停扫描"
+  },
+  "indexRestart": {
+    "message": "重新扫描"
+  },
+  "indexStart": {
+    "message": "扫描历史"
+  },
+  "indexResume": {
+    "message": "继续扫描"
+  },
+  "indexError": {
+    "message": "扫描已暂停：$1"
+  },
+  "zoomOut": {
+    "message": "缩小"
+  },
+  "zoomIn": {
+    "message": "放大"
+  },
+  "fit": {
+    "message": "适应窗口"
+  },
+  "legend": {
+    "message": "绿色：当前聊天路径 · 虚线：分支 · 拖动空白处移动视图"
+  },
+  "detailsHint": {
+    "message": "点击消息，回到对应的聊天记录。"
+  },
+  "language": {
+    "message": "界面语言"
+  },
+  "automatic": {
+    "message": "跟随浏览器"
+  },
+  "draftTitle": {
+    "message": "$1 · 草稿"
+  },
+  "draftUntitled": {
+    "message": "新分支草稿"
+  },
+  "unavailableTitle": {
+    "message": "无法访问的对话"
+  },
+  "targetMissing": {
+    "message": "页面还没显示这条消息，请重试。"
+  },
+  "noVersions": {
+    "message": "这条消息没有历史版本入口。"
+  },
+  "versionMissing": {
+    "message": "没有找到对应的历史版本。"
+  },
+  "messageMissing": {
+    "message": "这条消息已不在当前对话中，请刷新。"
+  },
+  "noVersionPath": {
+    "message": "这条历史分支没有可用的版本入口。"
+  },
+  "conversationUnavailable": {
+    "message": "这个对话已删除或无法访问。"
+  },
+  "unknownOperation": {
+    "message": "未知操作。"
+  },
+  "sessionLoad": {
+    "message": "登录状态加载失败（$1）。请在 ChatGPT 中重试，再刷新分支图。"
+  },
+  "signIn": {
+    "message": "请先登录 ChatGPT。"
+  },
+  "conversationLoad": {
+    "message": "对话加载失败（$1），请重试。"
+  }
+}

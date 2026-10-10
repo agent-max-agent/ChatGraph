@@ -3,9 +3,9 @@ import type { ConversationData, PageRequest, PageResult } from './types.js';
 ﻿export async function readChatGPT(request: PageRequest): Promise<PageResult> {
   try {
     const sessionResponse = await fetch('/api/auth/session', { credentials: 'include' });
-    if (!sessionResponse.ok) throw new Error(`登录状态加载失败 (${sessionResponse.status})，请在 ChatGPT 重试后刷新图。`);
+    if (!sessionResponse.ok) throw new Error(`sessionLoad|${sessionResponse.status}`);
     const session = await sessionResponse.json() as { accessToken?: string };
-    if (!session.accessToken) throw new Error('请先登录 ChatGPT。');
+    if (!session.accessToken) throw new Error('signIn');
 
     const headers = { Authorization: `Bearer ${session.accessToken}` };
     let path;
@@ -18,7 +18,7 @@ import type { ConversationData, PageRequest, PageResult } from './types.js';
     }
 
     const response = await fetch(path, { headers, credentials: 'include' });
-    if (!response.ok) return { error: `对话加载失败 (${response.status})，请重试。`, status: response.status };
+    if (!response.ok) return { error: `conversationLoad|${response.status}`, status: response.status };
     const data: unknown = await response.json();
     if (request.kind === 'list') {
       const page = data as { items: { id: string }[]; total: number };

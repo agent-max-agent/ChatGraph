@@ -49,11 +49,11 @@ export function projectConversation(data: ConversationData): Conversation {
 export function navigationPlan(conversation: Conversation, targetId: string): NavigationPlan {
   const nodes = new Map(conversation.nodes.map(node => [node.id, node]));
   const targetPath = pathTo(nodes, targetId);
-  if (!nodes.has(targetId)) throw new Error('消息已不在当前对话树中，请刷新图。');
+  if (!nodes.has(targetId)) throw new Error('messageMissing');
   if (conversation.activePath.includes(targetId)) return { kind: 'current', targetId, pathIds: conversation.activePath };
   const index = targetPath.findIndex((id, position) => id !== conversation.activePath[position]);
   const activeId = conversation.activePath[index];
-  if (!activeId) throw new Error('该历史路径没有可打开的当前版本入口。');
+  if (!activeId) throw new Error('noVersionPath');
   let anchor = nodes.get(activeId)!;
   while (anchor.role !== 'user') anchor = nodes.get(anchor.parent!)!;
   const branchId = targetPath[index];
@@ -96,7 +96,7 @@ export function buildGraph(conversations: Conversation[], currentId: string | un
     for (const node of conversation.nodes) {
       const nodeKey = key(id, node.id);
       if (replacements.has(nodeKey)) continue;
-      nodes.push({ ...node, key: nodeKey, conversationId: id, conversationTitle: conversation.title, titleKind: conversation.titleKind, unavailable: conversation.unavailable ?? false, active: false });
+      nodes.push({ ...node, key: nodeKey, conversationId: id, conversationTitle: conversation.title, titleKind: conversation.unavailable ? 'unavailable' : conversation.titleKind, unavailable: conversation.unavailable ?? false, active: false });
       if (node.parent) edges.push({ from: key(id, node.parent), to: nodeKey, kind: 'message' });
     }
   }
@@ -126,14 +126,14 @@ export function buildGraph(conversations: Conversation[], currentId: string | un
   const childKeys = new Set(resolvedEdges.map(edge => edge.to));
   const roots = nodes.filter(node => !childKeys.has(node.key));
   const rootKey = 'conversation-start';
-  nodes.push({ key: rootKey, id: null, role: 'root', text: '对话开始', conversationTitle: '', active: true });
+  nodes.push({ key: rootKey, id: null, role: 'root', text: '', conversationTitle: '', active: true });
   for (const root of roots) resolvedEdges.push({ from: rootKey, to: root.key, kind: 'version' });
   return { nodes, edges: resolvedEdges, title: current.title, titleKind: current.titleKind, conversationCount: family.size };
 }
 
 export function layoutGraph(graph: Graph): Layout {
   const children = new Map(graph.nodes.map(node => [node.key, [] as string[]]));
-  const parents = new Set();
+  const parents = new Set<string>();
   for (const edge of graph.edges) {
     children.get(edge.from)!.push(edge.to);
     parents.add(edge.to);

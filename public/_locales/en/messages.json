@@ -1,0 +1,137 @@
+{
+  "extensionDescription": {
+    "message": "Explore ChatGPT conversation branches and click messages to revisit them."
+  },
+  "actionTitle": {
+    "message": "Open ChatGraph"
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "branches": {
+    "message": "Conversation branches"
+  },
+  "openChat": {
+    "message": "Open a ChatGPT conversation."
+  },
+  "initialStatus": {
+    "message": "Open a ChatGPT conversation to view its branches."
+  },
+  "draftStatus": {
+    "message": "This branch is a draft. Send a message to save it."
+  },
+  "counts": {
+    "message": "$1 conversations · $2 messages"
+  },
+  "syncing": {
+    "message": " · Syncing"
+  },
+  "rootHint": {
+    "message": "Different first-message versions start here"
+  },
+  "unavailable": {
+    "message": "Unavailable"
+  },
+  "root": {
+    "message": "Conversation start"
+  },
+  "rootSummary": {
+    "message": "First messages and branches"
+  },
+  "you": {
+    "message": "You"
+  },
+  "attachment": {
+    "message": "Attachment"
+  },
+  "indexProgress": {
+    "message": "Scanned $1/$2 conversations"
+  },
+  "indexDone": {
+    "message": " · Done"
+  },
+  "indexRunning": {
+    "message": " · Scanning"
+  },
+  "indexPaused": {
+    "message": " · Paused"
+  },
+  "indexHint": {
+    "message": "Scan existing chats to find earlier branches."
+  },
+  "indexPause": {
+    "message": "Pause scan"
+  },
+  "indexRestart": {
+    "message": "Scan again"
+  },
+  "indexStart": {
+    "message": "Scan history"
+  },
+  "indexResume": {
+    "message": "Resume scan"
+  },
+  "indexError": {
+    "message": "Scan paused: $1"
+  },
+  "zoomOut": {
+    "message": "Zoom out"
+  },
+  "zoomIn": {
+    "message": "Zoom in"
+  },
+  "fit": {
+    "message": "Fit to view"
+  },
+  "legend": {
+    "message": "Green: current chat path · Dashed: branches · Drag empty space to pan"
+  },
+  "detailsHint": {
+    "message": "Click a message to revisit it."
+  },
+  "language": {
+    "message": "Interface language"
+  },
+  "automatic": {
+    "message": "Browser default"
+  },
+  "draftTitle": {
+    "message": "$1 · Draft"
+  },
+  "draftUntitled": {
+    "message": "New branch draft"
+  },
+  "unavailableTitle": {
+    "message": "Unavailable conversation"
+  },
+  "targetMissing": {
+    "message": "The message has not appeared on the page. Try again."
+  },
+  "noVersions": {
+    "message": "This message has no version history control."
+  },
+  "versionMissing": {
+    "message": "The requested version was not found."
+  },
+  "messageMissing": {
+    "message": "This message is no longer in the conversation. Refresh the graph."
+  },
+  "noVersionPath": {
+    "message": "This historical branch has no available version control."
+  },
+  "conversationUnavailable": {
+    "message": "This conversation was deleted or is unavailable."
+  },
+  "unknownOperation": {
+    "message": "Unknown operation."
+  },
+  "sessionLoad": {
+    "message": "Could not load the sign-in state ($1). Retry in ChatGPT, then refresh the graph."
+  },
+  "signIn": {
+    "message": "Sign in to ChatGPT first."
+  },
+  "conversationLoad": {
+    "message": "Could not load the conversation ($1). Try again."
+  }
+}

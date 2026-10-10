@@ -4,6 +4,9 @@ body { margin: 0; display: flex; flex-direction: column; height: 100vh; }
 button { font: inherit; color: inherit; background: #282e2c; border: 1px solid #46514c; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
 button:hover { border-color: #8ecbb4; }
 header { display: flex; align-items: center; justify-content: space-between; padding: 14px; border-bottom: 1px solid #303a35; }
+#header-actions { display: flex; align-items: center; gap: 6px; }
+select { font: inherit; font-size: 12px; color: inherit; background: #282e2c; border: 1px solid #46514c; border-radius: 8px; padding: 6px; max-width: 130px; }
+#index { flex-shrink: 0; }
 h1 { font-size: 15px; margin: 14px 14px 4px; }
 #status { font-size: 12px; color: #b4c2bb; margin: 6px 14px; min-height: 32px; }
 nav { display: flex; gap: 6px; padding: 4px 14px 10px; }
