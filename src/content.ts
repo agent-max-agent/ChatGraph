@@ -1,18 +1,20 @@
-function visible(element) {
+import type { CoordinatorMessage, NavigationPlan, NavigationReply } from './types.js';
+
+function visible(element: Element) {
   return element.checkVisibility({ checkVisibilityCSS: true }) && element.getClientRects().length > 0;
 }
 
-function messageElement(id, inVersions = false) {
+function messageElement(id: string, inVersions = false) {
   const selector = inVersions ? '[aria-modal="true"] [data-chatgpt-selection-message-id]' : 'main [data-chatgpt-search-message-ids]';
   return [...document.querySelectorAll(selector)].find(element => visible(element)
     && (inVersions ? element.getAttribute('data-chatgpt-selection-message-id') === id
-      : element.getAttribute('data-chatgpt-search-message-ids').split(' ').includes(id)));
+      : element.getAttribute('data-chatgpt-search-message-ids')!.split(' ').includes(id)));
 }
 
-function waitFor(find, timeout = 12000) {
+function waitFor<T>(find: () => T | null | undefined | false, timeout = 12000): Promise<T> {
   const found = find();
   if (found) return Promise.resolve(found);
-  return new Promise((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     const observer = new MutationObserver(() => {
       const value = find();
       if (value) {
@@ -29,11 +31,11 @@ function waitFor(find, timeout = 12000) {
   });
 }
 
-async function locateMainMessage(id, pathIds) {
-  const region = await waitFor(() => [...document.querySelectorAll('[aria-label="Conversation"]')]
+async function locateMainMessage(id: string, pathIds: string[]) {
+  const region = await waitFor(() => [...document.querySelectorAll<HTMLElement>('[aria-label="Conversation"]')]
     .find(element => visible(element) && element.querySelector('[data-chatgpt-search-message-ids]')));
   const renderedIds = () => [...region.querySelectorAll('[data-chatgpt-search-message-ids]')]
-    .filter(visible).map(element => element.getAttribute('data-chatgpt-search-message-ids').split(' ')[0]);
+    .filter(visible).map(element => element.getAttribute('data-chatgpt-search-message-ids')!.split(' ')[0]);
   let target = messageElement(id);
   while (!target) {
     const ids = renderedIds();
@@ -48,12 +50,12 @@ async function locateMainMessage(id, pathIds) {
   return target;
 }
 
-async function navigate(plan) {
+async function navigate(plan: NavigationPlan) {
   const versions = [...document.querySelectorAll('[aria-modal="true"]')]
     .find(dialog => dialog.querySelector('h2')?.textContent === 'Versions');
   if (versions) {
-    [...versions.querySelectorAll('button')].find(button => button.textContent.trim() === 'Close dialog'
-      || button.getAttribute('aria-label') === 'Close dialog').click();
+    [...versions.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent!.trim() === 'Close dialog'
+      || button.getAttribute('aria-label') === 'Close dialog')!.click();
     await waitFor(() => !versions.isConnected);
   }
   let target;
@@ -61,23 +63,23 @@ async function navigate(plan) {
     target = await locateMainMessage(plan.targetId, plan.pathIds);
   } else {
     const anchor = await locateMainMessage(plan.anchorId, plan.pathIds);
-    const button = anchor.closest('[data-turn-key]').querySelector('button[aria-label="See versions"]');
+    const button = anchor.closest('[data-turn-key]')!.querySelector<HTMLButtonElement>('button[aria-label="See versions"]');
     if (!button) throw new Error('此消息没有原生版本入口。');
     button.click();
     await waitFor(() => document.querySelector('[aria-modal="true"] button[aria-label="Next version"]'));
     while (!messageElement(plan.matchId, true)) {
-      const next = document.querySelector('[aria-modal="true"] button[aria-label="Next version"]');
+      const next = document.querySelector<HTMLButtonElement>('[aria-modal="true"] button[aria-label="Next version"]')!;
       if (next.disabled) throw new Error('未找到对应历史版本。');
-      const before = document.querySelector('[aria-modal="true"]').innerText;
+      const before = document.querySelector<HTMLElement>('[aria-modal="true"]')!.innerText;
       next.click();
-      await waitFor(() => document.querySelector('[aria-modal="true"]').innerText !== before);
+      await waitFor(() => document.querySelector<HTMLElement>('[aria-modal="true"]')!.innerText !== before);
     }
     target = await waitFor(() => {
       if (plan.targetRole === 'assistant') return messageElement(plan.targetId, true);
-      const normalize = text => text.replace(/\s+/g, ' ').trim();
+      const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
       return [...document.querySelectorAll('[aria-modal="true"] p, [aria-modal="true"] div, [aria-modal="true"] span')]
-        .find(element => visible(element) && normalize(element.textContent) === normalize(plan.targetText)
-          && ![...element.children].some(child => normalize(child.textContent) === normalize(plan.targetText)));
+        .find(element => visible(element) && normalize(element.textContent!) === normalize(plan.targetText)
+          && ![...element.children].some(child => normalize(child.textContent!) === normalize(plan.targetText)));
     });
   }
   target.scrollIntoView({ block: 'center', behavior: 'instant' });
@@ -85,18 +87,18 @@ async function navigate(plan) {
   await chrome.runtime.sendMessage({ type: 'navigated' });
 }
 
-chrome.runtime.onMessage.addListener((message, sender, respond) => {
+chrome.runtime.onMessage.addListener((message: { type: string; plan: NavigationPlan }, sender, respond) => {
   if (message.type !== 'navigate') return;
   navigate(message.plan).then(() => respond({ ok: true }), error => respond({ error: error.message }));
   return true;
 });
 
-chrome.runtime.sendMessage({ type: 'ready' }).then(result => {
+chrome.runtime.sendMessage<CoordinatorMessage, NavigationReply>({ type: 'ready' }).then(result => {
   if (result.plan) return navigate(result.plan);
 }).catch(error => chrome.runtime.sendMessage({ type: 'navigationError', error: error.message }));
 
 function observeMessages() {
-  let timer;
+  let timer: ReturnType<typeof setTimeout>;
   let previous = '';
   const observer = new MutationObserver(() => {
     const signature = [...document.querySelectorAll('main [data-chatgpt-search-message-ids]')]

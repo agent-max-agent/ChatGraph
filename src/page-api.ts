@@ -1,8 +1,10 @@
-﻿export async function readChatGPT(request) {
+import type { ConversationData, PageRequest, PageResult } from './types.js';
+
+﻿export async function readChatGPT(request: PageRequest): Promise<PageResult> {
   try {
     const sessionResponse = await fetch('/api/auth/session', { credentials: 'include' });
     if (!sessionResponse.ok) throw new Error(`登录状态加载失败 (${sessionResponse.status})，请在 ChatGPT 重试后刷新图。`);
-    const session = await sessionResponse.json();
+    const session = await sessionResponse.json() as { accessToken?: string };
     if (!session.accessToken) throw new Error('请先登录 ChatGPT。');
 
     const headers = { Authorization: `Bearer ${session.accessToken}` };
@@ -17,11 +19,15 @@
 
     const response = await fetch(path, { headers, credentials: 'include' });
     if (!response.ok) return { error: `对话加载失败 (${response.status})，请重试。`, status: response.status };
-    const data = await response.json();
-    if (request.kind === 'list') return { ids: data.items.map(item => item.id), total: data.total };
-    if (request.kind === 'versions') return data.map(messages => messages.map(message => message.id));
-    return { id: request.id, title: data.title, currentNode: data.current_node, mapping: data.mapping };
+    const data: unknown = await response.json();
+    if (request.kind === 'list') {
+      const page = data as { items: { id: string }[]; total: number };
+      return { ids: page.items.map(item => item.id), total: page.total };
+    }
+    if (request.kind === 'versions') return (data as { id: string }[][]).map(messages => messages.map(message => message.id));
+    const conversation = data as { title: string; current_node: string | null; mapping: ConversationData['mapping'] };
+    return { id: request.id, title: conversation.title, currentNode: conversation.current_node, mapping: conversation.mapping };
   } catch (error) {
-    return { error: error.message };
+    return { error: (error as Error).message };
   }
 }

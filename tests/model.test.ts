@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { projectConversation, buildGraph, navigationPlan } from '../src/model.js';
+import { projectConversation, buildGraph, navigationPlan } from '../src/model.ts';
+import type { RawNode, Role } from '../src/types.js';
 
-function message(id, parent, role, metadata = {}) {
+function message(id: string, parent: string | null, role: Role, metadata: NonNullable<RawNode['message']>['metadata'] = {}): RawNode {
   return { id, parent, message: { author: { role }, metadata, content: { parts: [id] }, create_time: 1 } };
 }
 
@@ -13,9 +14,9 @@ test('regeneration preserves the source recorded on the old fork point', () => {
     replacement: message('replacement', 'prompt', 'assistant'),
   };
   const value = projectConversation({ id: 'child', title: '读书会', mapping, currentNode: 'replacement' });
-  assert.equal(value.fork.branchSource, 'source');
+  assert.equal(value.fork!.branchSource, 'source');
   assert.deepEqual(value.activePath, ['prompt', 'replacement']);
-  assert.equal(navigationPlan(value, 'original').anchorId, 'prompt');
+  assert.equal((navigationPlan(value, 'original') as Extract<ReturnType<typeof navigationPlan>, { kind: 'version' }>).anchorId, 'prompt');
 });
 
 test('shared prefix renders once and active prefix navigates in the current child', () => {
@@ -30,8 +31,8 @@ test('shared prefix renders once and active prefix navigates in the current chil
   const graph = buildGraph([child, source], 'child');
   assert.equal(graph.nodes.filter(node => node.role !== 'root').length, 3);
   assert.equal(graph.conversationCount, 2);
-  assert.equal(graph.nodes.find(node => node.id === 'answer').navigationConversationId, 'child');
-  assert.equal(graph.edges.find(edge => edge.to === 'child:followup').from, 'source:answer');
+  assert.equal(graph.nodes.find(node => node.id === 'answer')!.navigationConversationId, 'child');
+  assert.equal(graph.edges.find(edge => edge.to === 'child:followup')!.from, 'source:answer');
   const children = new Set(graph.edges.map(edge => edge.to));
   assert.deepEqual(graph.nodes.filter(node => !children.has(node.key)).map(node => node.key), ['conversation-start']);
 });
@@ -45,7 +46,7 @@ test('regenerating a nested fork keeps its immediate parent rather than an ances
     regenerated: message('regenerated', 'second', 'assistant'),
   };
   const conversation = projectConversation({ id: 'child', title: '读书会续聊', currentNode: 'regenerated', mapping });
-  assert.equal(conversation.fork.branchSource, 'parent');
+  assert.equal(conversation.fork!.branchSource, 'parent');
 });
 
 test('an old shared message opens its saved child path rather than source versions', () => {
@@ -60,11 +61,11 @@ test('an old shared message opens its saved child path rather than source versio
     followup: message('followup', 'original', 'user'),
   } });
   const graph = buildGraph([source, child], 'source');
-  const target = graph.nodes.find(node => node.id === 'original');
+  const target = graph.nodes.find(node => node.id === 'original')!;
   assert.equal(target.navigationConversationId, 'child');
-  assert.equal(navigationPlan(child, target.id).kind, 'current');
-  assert.equal(graph.nodes.find(node => node.id === 'prompt').navigationConversationId, 'source');
+  assert.equal(navigationPlan(child, target.id!).kind, 'current');
+  assert.equal(graph.nodes.find(node => node.id === 'prompt')!.navigationConversationId, 'source');
   const draft = { ...child, id: 'local-chatgpt:draft' };
   const draftGraph = buildGraph([source, draft], 'source');
-  assert.equal(draftGraph.nodes.find(node => node.id === 'original').navigationConversationId, 'source');
+  assert.equal(draftGraph.nodes.find(node => node.id === 'original')!.navigationConversationId, 'source');
 });

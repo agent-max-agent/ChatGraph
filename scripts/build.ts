@@ -1,11 +1,12 @@
 import { build, context } from 'esbuild';
+import type { BuildOptions } from 'esbuild';
 import { cp, mkdir } from 'node:fs/promises';
 
 await mkdir('dist', { recursive: true });
 await cp('public', 'dist', { recursive: true });
 
-const options = {
-  entryPoints: ['src/background.js', 'src/content.js', 'src/panel.js'],
+const options: BuildOptions = {
+  entryPoints: ['src/background.ts', 'src/content.ts', 'src/panel.ts'],
   bundle: true,
   outdir: 'dist',
   format: 'esm',

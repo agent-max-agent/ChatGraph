@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "dev": "node scripts/build.mjs --watch",
-    "test": "node --test tests/*.test.js",
-    "check": "node --check src/background.js && node --check src/content.js && node --check src/panel.js"
+    "build": "node --experimental-strip-types scripts/build.ts",
+    "dev": "node --experimental-strip-types scripts/build.ts --watch",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "check": "tsc --noEmit && node --experimental-strip-types scripts/check-types.ts"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "@types/chrome": "^0.3.5",
+    "@types/node": "^26.6.5",
+    "esbuild": "0.28.2",
+    "typescript": "^5.9.3"
   }
 }
