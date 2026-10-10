@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGraph</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <header><strong>ChatGraph</strong><button id="refresh">刷新</button></header>
+  <h1 id="title">对话分支</h1>
+  <p id="status" role="status">打开 ChatGPT 对话以查看历史。</p>
+  <div id="index-controls"><button id="index">补录历史</button><span id="index-status" role="status">补录已有会话，发现历史分支。</span></div>
+  <nav><button id="out" aria-label="缩小">−</button><button id="fit">适应</button><button id="in" aria-label="放大">+</button></nav>
+  <p id="legend">绿色：当前路径 · 虚线：新对话分支 · 拖动空白处移动树</p>
+  <div id="viewport"><div id="stage"><div id="canvas"><svg id="edges" aria-hidden="true"></svg><div id="nodes"></div></div></div></div>
+  <section id="details"><p>点击消息节点跳转到对应历史。</p></section>
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

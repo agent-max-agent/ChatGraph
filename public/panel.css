@@ -1,0 +1,26 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; background: #181b1b; color: #e9efec; }
+* { box-sizing: border-box; }
+body { margin: 0; display: flex; flex-direction: column; height: 100vh; }
+button { font: inherit; color: inherit; background: #282e2c; border: 1px solid #46514c; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: #8ecbb4; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 14px; border-bottom: 1px solid #303a35; }
+h1 { font-size: 15px; margin: 14px 14px 4px; }
+#status { font-size: 12px; color: #b4c2bb; margin: 6px 14px; min-height: 32px; }
+nav { display: flex; gap: 6px; padding: 4px 14px 10px; }
+#index-controls { display: flex; align-items: center; gap: 8px; padding: 4px 14px 10px; }
+#index-status { font-size: 11px; color: #b4c2bb; }
+#legend { margin: 0 14px 10px; font-size: 11px; color: #b4c2bb; }
+#viewport.panning { cursor: grabbing; }
+#viewport { flex: 1; overflow: auto; background: radial-gradient(#36403a 1px, transparent 1px); background-size: 18px 18px; min-height: 180px; }
+#stage { position: relative; overflow: hidden; }
+#canvas { position: absolute; transform-origin: top left; }
+#edges, #nodes { position: absolute; inset: 0; }
+.node { position: absolute; width: 112px; height: 80px; text-align: left; padding: 7px; background: #242a27; overflow: hidden; }
+.node.root { text-align: center; border-radius: 20px; cursor: default; }
+.node.active { border-color: #76ba9c; background: #233a2f; }
+.node.selected { outline: 2px solid #b1e7cd; }
+.node.unavailable { opacity: 0.55; border-style: dashed; }
+.node small { color: #9caf9f; display: block; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node strong { display: block; font-size: 14px; margin: 0 0 4px; }
+.node span { font-size: 15px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#details { border-top: 1px solid #303a35; padding: 10px 14px; max-height: 180px; overflow: auto; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
