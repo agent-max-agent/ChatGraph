@@ -27,6 +27,8 @@ export function projectConversation(data: ConversationData): Conversation {
         (node) =>
           node.message &&
           ['user', 'assistant'].includes(node.message.author.role) &&
+          node.message.channel !== 'analysis' &&
+          !['thoughts', 'reasoning_recap'].includes(node.message.content.content_type ?? '') &&
           (!node.message.recipient || node.message.recipient === 'all') &&
           !node.message.metadata.is_visually_hidden_from_conversation,
       )
@@ -40,12 +42,7 @@ export function projectConversation(data: ConversationData): Conversation {
       while (parent && !visible.has(parent)) parent = data.mapping[parent].parent;
       const message = node.message!;
       const content = message.content;
-      const text =
-        content.content_type === 'thoughts'
-          ? (content.thoughts ?? []).map((thought) => thought.summary).join('\n')
-          : content.content_type === 'reasoning_recap'
-            ? (content.content ?? '')
-            : (content.parts ?? []).filter((part) => typeof part === 'string').join('\n');
+      const text = (content.parts ?? []).filter((part) => typeof part === 'string').join('\n');
       const hasAttachments =
         Boolean(message.metadata.attachments?.length) ||
         (content.parts ?? []).some(

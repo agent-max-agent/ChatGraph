@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { projectConversation, buildGraph, navigationPlan } from '../src/model.ts';
 import type { RawNode, Role } from '../src/types.js';
 
-test('public thinking summaries and recaps retain content while tool calls are omitted', () => {
+test('thinking, recaps and tool calls are omitted while answer ancestry remains intact', () => {
   const prompt = message('prompt', null, 'user');
   const tool = message('tool', 'prompt', 'assistant');
   tool.message!.recipient = 'web.run';
@@ -16,22 +16,32 @@ test('public thinking summaries and recaps retain content while tool calls are o
   };
   const recap = message('recap', 'thoughts', 'assistant');
   recap.message!.content = { content_type: 'reasoning_recap', content: 'Thought for 15 seconds' };
-  const answer = message('answer', 'recap', 'assistant');
+  const analysis = message('analysis', 'recap', 'assistant');
+  analysis.message!.channel = 'analysis';
+  const answer = message('answer', 'analysis', 'assistant');
   const conversation = projectConversation({
     id: 'reference',
     title: 'Inference service',
     currentNode: 'answer',
-    mapping: { prompt, tool, thoughts, recap, answer },
+    mapping: { prompt, tool, thoughts, recap, analysis, answer },
   });
   assert.deepEqual(
     conversation.nodes.map((node) => node.id),
-    ['prompt', 'thoughts', 'recap', 'answer'],
+    ['prompt', 'answer'],
   );
-  assert.equal(conversation.nodes[1].text, 'Checking the serving architecture');
+  assert.equal(conversation.nodes[1].text, 'answer');
   assert.equal(conversation.nodes[1].parent, 'prompt');
-  assert.equal(conversation.nodes[2].text, 'Thought for 15 seconds');
   assert.ok(conversation.nodes.every((node) => !node.hasAttachments));
-  assert.deepEqual(conversation.activePath, ['prompt', 'thoughts', 'recap', 'answer']);
+  assert.deepEqual(conversation.activePath, ['prompt', 'answer']);
+  assert.equal(
+    projectConversation({
+      id: 'thinking',
+      title: '',
+      currentNode: 'analysis',
+      mapping: { prompt, tool, thoughts, recap, analysis, answer },
+    }).currentNode,
+    'prompt',
+  );
 });
 
 test('empty and unsupported messages do not imply attachments, while actual attachments remain identified', () => {
