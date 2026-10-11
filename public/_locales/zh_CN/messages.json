@@ -160,5 +160,50 @@
   },
   "conversationLoad": {
     "message": "对话加载失败（$1），请重试。"
+  },
+  "cacheTitle": {
+    "message": "本地缓存"
+  },
+  "cacheHint": {
+    "message": "查看保存的对话与扫描进度。清除仅删除当前本地数据并保留设置。正常同步和扫描会继续缓存数据。"
+  },
+  "cacheInspect": {
+    "message": "查看缓存"
+  },
+  "cacheClearSelected": {
+    "message": "清除所选缓存"
+  },
+  "cacheClearAll": {
+    "message": "清除全部缓存"
+  },
+  "cacheEmpty": {
+    "message": "没有已缓存的对话或扫描进度。"
+  },
+  "cacheSummary": {
+    "message": "$1 个缓存项 · $2"
+  },
+  "cacheMessages": {
+    "message": "$1 条消息"
+  },
+  "cacheProgress": {
+    "message": "历史扫描：$1 / $2"
+  },
+  "cacheSelect": {
+    "message": "选择 $1"
+  },
+  "cacheConfirm": {
+    "message": "清除全部本地对话缓存和扫描进度？设置与 ChatGPT 上的对话将保留。"
+  },
+  "cacheClearComplete": {
+    "message": "已清除 $1 个缓存项。"
+  },
+  "cacheBytes": {
+    "message": "$1 字节"
+  },
+  "cacheKilobytes": {
+    "message": "$1 KB"
+  },
+  "cacheCollapse": {
+    "message": "收起缓存"
   }
 }
