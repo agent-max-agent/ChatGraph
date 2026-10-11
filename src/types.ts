@@ -26,6 +26,7 @@ export interface RawNode {
   parent: string | null;
   message?: {
     author: { role: string };
+    channel?: string;
     recipient?: string;
     metadata: {
       is_visually_hidden_from_conversation?: boolean;

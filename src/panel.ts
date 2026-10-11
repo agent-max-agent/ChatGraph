@@ -383,8 +383,14 @@ enablePreviewResize();
 document.querySelector<HTMLElement>('#viewport')!.addEventListener(
   'wheel',
   (event) => {
-    if (!event.ctrlKey) return;
+    if (!event.ctrlKey && !event.altKey) return;
     event.preventDefault();
+    if (!event.ctrlKey) {
+      const viewport = event.currentTarget as HTMLElement;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
+      viewport.scrollBy((event.deltaY || event.deltaX) * unit, 0);
+      return;
+    }
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
     panel.zoom(Math.max(0.3, Math.min(2, panel.scale * Math.exp(-event.deltaY * unit * 0.002))), {
       x: event.clientX,
