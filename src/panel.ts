@@ -7,7 +7,7 @@ import type {
   Snapshot,
 } from './types.js';
 
-import { buildGraph, layoutGraph } from './model.js';
+import { buildGraph, collapseLinearChains, layoutGraph } from './model.js';
 import { createTranslator, resolveLanguage, translatedError } from './i18n.js';
 import type { LanguagePreference, MessageKey } from './i18n.js';
 
@@ -25,6 +25,7 @@ class Panel {
   conversationContext?: string;
   showScanProgress = false;
   syncing = false;
+  collapsed = false;
 
   // Language and UI text.
   title(text: string, kind?: Graph['titleKind']) {
@@ -125,7 +126,11 @@ class Panel {
     const margin = viewport.clientWidth / 2;
     const canvas = document.querySelector<HTMLElement>('#canvas')!;
     const scrollLeft = viewport.scrollLeft + margin - parseFloat(canvas.style.left || '0');
-    this.layout = layoutGraph(this.graph);
+    const graph = this.collapsed ? collapseLinearChains(this.graph) : this.graph;
+    this.layout = layoutGraph(graph);
+    const collapseButton = document.querySelector<HTMLButtonElement>('#collapse')!;
+    collapseButton.textContent = this.t(this.collapsed ? 'expandChains' : 'collapseChains');
+    collapseButton.setAttribute('aria-pressed', String(this.collapsed));
     canvas.style.left = `${margin}px`;
     canvas.style.width = `${this.layout.width}px`;
     canvas.style.height = `${this.layout.height}px`;
@@ -138,7 +143,7 @@ class Panel {
     svg.setAttribute('width', String(this.layout.width));
     svg.setAttribute('height', String(this.layout.height));
     svg.replaceChildren();
-    for (const edge of this.graph.edges) {
+    for (const edge of graph.edges) {
       const from = this.layout.positions.get(edge.from)!;
       const to = this.layout.positions.get(edge.to)!;
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -151,11 +156,23 @@ class Panel {
       path.setAttribute('stroke-width', '2');
       if (edge.kind === 'fork') path.setAttribute('stroke-dasharray', '5 4');
       svg.append(path);
+      if (edge.collapsed) {
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', String((from.x + to.x) / 2 + 64));
+        label.setAttribute('y', String((from.y + 80 + to.y) / 2 + 4));
+        label.setAttribute('fill', 'var(--secondary)');
+        label.setAttribute('font-size', '11');
+        label.textContent = `… ${edge.collapsed}`;
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = this.t('hiddenMessages', [String(edge.collapsed)]);
+        label.append(title);
+        svg.append(label);
+      }
     }
     const container = document.querySelector<HTMLElement>('#nodes')!;
     const tabId = this.tabId;
     container.replaceChildren();
-    for (const node of this.graph.nodes) {
+    for (const node of graph.nodes) {
       const button = document.createElement('button');
       button.className = `node${node.active ? ' active' : ''}`;
       if (node.key === this.selectedNode?.key) button.classList.add('selected');
@@ -426,6 +443,10 @@ document
   .querySelector<HTMLElement>('#out')!
   .addEventListener('click', () => panel.zoom(Math.max(0.3, panel.scale - 0.15)));
 document.querySelector<HTMLElement>('#fit')!.addEventListener('click', () => panel.fit());
+document.querySelector<HTMLElement>('#collapse')!.addEventListener('click', () => {
+  panel.collapsed = !panel.collapsed;
+  if (panel.graph) panel.render();
+});
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.language) panel.language().catch((error: Error) => panel.error(error));
   if (

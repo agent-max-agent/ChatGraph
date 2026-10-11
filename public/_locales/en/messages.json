@@ -8,6 +8,15 @@
   "refresh": {
     "message": "Refresh"
   },
+  "collapseChains": {
+    "message": "Collapse chains"
+  },
+  "expandChains": {
+    "message": "Expand chains"
+  },
+  "hiddenMessages": {
+    "message": "$1 hidden messages"
+  },
   "branches": {
     "message": "Conversation branches"
   },

@@ -219,6 +219,40 @@ export function buildGraph(conversations: Conversation[], currentId: string | un
   };
 }
 
+export function collapseLinearChains(graph: Graph): Graph {
+  const children = new Map(graph.nodes.map((node) => [node.key, [] as Graph['edges']]));
+  const parents = new Map(graph.edges.map((edge) => [edge.to, edge.from]));
+  for (const edge of graph.edges) children.get(edge.from)!.push(edge);
+  const roots = new Set(graph.nodes.filter((node) => node.role === 'root').map((node) => node.key));
+  const hidden = new Set<string>();
+  for (const node of graph.nodes) {
+    const parent = parents.get(node.key);
+    if (roots.has(node.key)) continue;
+    if (parent && !roots.has(parent) && children.get(node.key)!.length <= 1) continue;
+    for (const edge of children.get(node.key)!) {
+      const chain = [node.key, edge.to];
+      while (children.get(chain.at(-1)!)!.length === 1) {
+        chain.push(children.get(chain.at(-1)!)![0].to);
+      }
+      for (const key of chain.slice(2, -2)) hidden.add(key);
+    }
+  }
+  const edges = graph.edges
+    .filter((edge) => !hidden.has(edge.from))
+    .map((edge) => {
+      let { to, kind } = edge;
+      let collapsed = 0;
+      while (hidden.has(to)) {
+        const next = children.get(to)![0];
+        to = next.to;
+        if (next.kind === 'fork') kind = 'fork';
+        collapsed++;
+      }
+      return collapsed ? { ...edge, to, kind, collapsed } : edge;
+    });
+  return { ...graph, nodes: graph.nodes.filter((node) => !hidden.has(node.key)), edges };
+}
+
 export function layoutGraph(graph: Graph): Layout {
   const children = new Map(graph.nodes.map((node) => [node.key, [] as string[]]));
   const parents = new Set<string>();

@@ -8,6 +8,15 @@
   "refresh": {
     "message": "刷新"
   },
+  "collapseChains": {
+    "message": "折叠长链"
+  },
+  "expandChains": {
+    "message": "展开长链"
+  },
+  "hiddenMessages": {
+    "message": "隐藏了 $1 条消息"
+  },
   "branches": {
     "message": "对话分支"
   },
