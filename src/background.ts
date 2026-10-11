@@ -14,7 +14,6 @@ import type {
 import { conversationId, projectConversation, navigationPlan } from './model.js';
 import { readChatGPT } from './page-api.js';
 import { readVisibleConversation } from './page-state.js';
-import { scanRequest } from './scan-rate.js';
 
 class Coordinator {
   states = new Map<number, TabState>();
@@ -126,12 +125,21 @@ class Coordinator {
   }
 
   async advanceIndex(tabId: number, progress: IndexProgress) {
-    const read = <T extends PageResult>(request: PageRequest) =>
-      scanRequest(
-        progress,
-        () => this.read<T>(tabId, request),
-        () => chrome.storage.local.set({ historyIndex: progress }),
-      );
+    const read = async <T extends PageResult>(request: PageRequest): Promise<T> => {
+      const remaining = (progress.nextRequestAt ?? 0) - Date.now();
+      if (remaining > 0) await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+      try {
+        return await this.read<T>(tabId, request);
+      } catch (error) {
+        if ((error as { status?: number }).status === 429) {
+          progress.requestInterval = (progress.requestInterval ?? 500) * 2;
+        }
+        throw error;
+      } finally {
+        progress.nextRequestAt = Date.now() + (progress.requestInterval ?? 500);
+        await chrome.storage.local.set({ historyIndex: progress });
+      }
+    };
     if (progress.cursor === progress.ids.length) {
       const page = await read<{ ids: string[]; total: number }>({
         kind: 'list',
