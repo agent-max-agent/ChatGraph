@@ -102,12 +102,8 @@ class Panel {
           ]));
     if (changed) {
       this.layout = layoutGraph(this.graph);
-      if (fitView)
-        this.scale = Math.min(
-          1,
-          document.querySelector<HTMLElement>('#viewport')!.clientWidth / this.layout.width,
-        );
-      this.render();
+      if (fitView) this.fit();
+      else this.render();
     }
     if (refresh) {
       await this.request({ type: 'sync', tabId: tab.id });
@@ -125,14 +121,17 @@ class Panel {
   // Graph rendering, selection, and navigation.
   render() {
     const viewport = document.querySelector<HTMLElement>('#viewport')!;
-    const { scrollLeft, scrollTop } = viewport;
-    this.layout = layoutGraph(this.graph);
+    const { scrollTop } = viewport;
+    const margin = viewport.clientWidth / 2;
     const canvas = document.querySelector<HTMLElement>('#canvas')!;
+    const scrollLeft = viewport.scrollLeft + margin - parseFloat(canvas.style.left || '0');
+    this.layout = layoutGraph(this.graph);
+    canvas.style.left = `${margin}px`;
     canvas.style.width = `${this.layout.width}px`;
     canvas.style.height = `${this.layout.height}px`;
     canvas.style.transform = `scale(${this.scale})`;
     document.querySelector<HTMLElement>('#stage')!.style.width =
-      `${this.layout.width * this.scale}px`;
+      `${this.layout.width * this.scale + margin * 2}px`;
     document.querySelector<HTMLElement>('#stage')!.style.height =
       `${this.layout.height * this.scale}px`;
     const svg = document.querySelector<SVGSVGElement>('#edges')!;
@@ -204,9 +203,27 @@ class Panel {
     });
   }
 
-  zoom(value: number) {
+  zoom(value: number, anchor?: { x: number; y: number }) {
+    const canvas = document.querySelector<HTMLElement>('#canvas')!;
+    const before = canvas.getBoundingClientRect();
+    const point = anchor && {
+      x: (anchor.x - before.left) / this.scale,
+      y: (anchor.y - before.top) / this.scale,
+    };
     this.scale = value;
     this.render();
+    if (anchor && point) {
+      const after = canvas.getBoundingClientRect();
+      document
+        .querySelector<HTMLElement>('#viewport')!
+        .scrollBy(after.left + point.x * value - anchor.x, after.top + point.y * value - anchor.y);
+    }
+  }
+
+  fit() {
+    const viewport = document.querySelector<HTMLElement>('#viewport')!;
+    this.zoom(Math.min(1, viewport.clientWidth / this.layout.width));
+    viewport.scrollLeft = parseFloat(document.querySelector<HTMLElement>('#canvas')!.style.left);
   }
 
   // History scanning and progress display.
@@ -267,6 +284,7 @@ function enablePanning() {
   let origin: { x: number; y: number; left: number; top: number } | null;
   viewport.addEventListener('pointerdown', (event) => {
     if (event.button !== 0 || (event.target as Element).closest('.node')) return;
+    event.preventDefault();
     origin = {
       x: event.clientX,
       y: event.clientY,
@@ -354,6 +372,19 @@ function enablePreviewResize() {
 const panel = new Panel();
 enablePanning();
 enablePreviewResize();
+document.querySelector<HTMLElement>('#viewport')!.addEventListener(
+  'wheel',
+  (event) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+    panel.zoom(Math.max(0.3, Math.min(2, panel.scale * Math.exp(-event.deltaY * unit * 0.002))), {
+      x: event.clientX,
+      y: event.clientY,
+    });
+  },
+  { passive: false },
+);
 document
   .querySelector<HTMLElement>('#refresh')!
   .addEventListener('click', () => panel.load(true).catch((error: Error) => panel.error(error)));
@@ -366,16 +397,7 @@ document
 document
   .querySelector<HTMLElement>('#out')!
   .addEventListener('click', () => panel.zoom(Math.max(0.3, panel.scale - 0.15)));
-document
-  .querySelector<HTMLElement>('#fit')!
-  .addEventListener('click', () =>
-    panel.zoom(
-      Math.min(
-        1,
-        document.querySelector<HTMLElement>('#viewport')!.clientWidth / panel.layout.width,
-      ),
-    ),
-  );
+document.querySelector<HTMLElement>('#fit')!.addEventListener('click', () => panel.fit());
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.language) panel.language().catch((error: Error) => panel.error(error));
   if (
