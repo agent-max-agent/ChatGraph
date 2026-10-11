@@ -53,6 +53,12 @@ button:disabled {
   opacity: 0.5;
   cursor: default;
 }
+#cache-list {
+  height: 320px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
 .cache-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
