@@ -111,17 +111,17 @@ export interface TabState {
   loading: boolean;
   error: string | null;
   draft?: Conversation | null;
+  remainingSource?: string;
 }
 
 export interface IndexProgress {
-  requestInterval?: number;
-  nextRequestAt?: number;
   offset: number;
   ids: string[];
   cursor: number;
   completed: number;
   total: number;
   done: boolean;
+  error?: string;
 }
 
 export interface Snapshot {
@@ -129,14 +129,16 @@ export interface Snapshot {
   id: string | undefined;
   state?: TabState;
   index?: IndexProgress;
+  indexing?: boolean;
   conversations: Conversation[];
 }
 
 export type CoordinatorMessage =
   | {
-      type: 'sync' | 'snapshot' | 'indexStep' | 'indexReset' | 'ready' | 'navigated';
+      type: 'snapshot' | 'indexBatch' | 'indexStop' | 'ready' | 'navigated';
       tabId?: number;
     }
+  | { type: 'sync'; tabId?: number; manual?: boolean }
   | { type: 'navigate'; tabId?: number; conversationId: string; messageId: string }
   | { type: 'navigationError'; tabId?: number; error: string };
 

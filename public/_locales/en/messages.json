@@ -6,7 +6,7 @@
     "message": "Open ChatGraph"
   },
   "refresh": {
-    "message": "Refresh"
+    "message": "Sync current chat"
   },
   "collapseChains": {
     "message": "Collapse chains"
@@ -72,19 +72,43 @@
     "message": " · Paused"
   },
   "indexHint": {
-    "message": "Scan existing chats to find earlier branches."
+    "message": "Each click scans up to 5 chats across your full history, then pauses. Continue to scan the next batch. Stops on rate limits until you click Continue."
   },
   "indexPause": {
     "message": "Pause scan"
   },
   "indexRestart": {
-    "message": "Scan again"
+    "message": "Rescan all history"
   },
   "indexStart": {
-    "message": "Scan history"
+    "message": "Scan all history"
   },
   "indexResume": {
-    "message": "Resume scan"
+    "message": "Continue scan"
+  },
+  "indexRateLimited": {
+    "message": "Rate limit reached. Click Continue scan when you want to retry."
+  },
+  "indexStopped": {
+    "message": "Scan stopped."
+  },
+  "syncMore": {
+    "message": "More source chats remain; click Sync current chat to continue."
+  },
+  "scanSettings": {
+    "message": "Scan settings"
+  },
+  "scanInterval": {
+    "message": "History scan request interval"
+  },
+  "scanThreeSeconds": {
+    "message": "3 seconds"
+  },
+  "scanFourSeconds": {
+    "message": "4 seconds (default)"
+  },
+  "scanFiveSeconds": {
+    "message": "5 seconds"
   },
   "indexError": {
     "message": "Scan paused: $1"

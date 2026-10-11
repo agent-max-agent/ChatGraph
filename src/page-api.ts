@@ -15,7 +15,7 @@ export async function readChatGPT(request: PageRequest): Promise<PageResult> {
     } else if (request.kind === 'versions') {
       path = `/backend-api/conversations/${encodeURIComponent(request.id)}/versions?message_id=${encodeURIComponent(request.messageId)}`;
     } else {
-      path = `/backend-api/conversations?offset=${request.offset}&limit=100&order=updated`;
+      path = `/backend-api/conversations?offset=${request.offset}&limit=5&order=updated`;
     }
 
     const response = await fetch(path, { headers, credentials: 'include' });

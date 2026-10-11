@@ -55,6 +55,10 @@ header {
   pointer-events: auto;
   opacity: 0.4;
 }
+.scan-controls {
+  flex-wrap: wrap;
+  flex-shrink: 1;
+}
 .scan-controls:hover,
 .scan-controls:has(:focus-visible),
 .zoom-controls:hover,

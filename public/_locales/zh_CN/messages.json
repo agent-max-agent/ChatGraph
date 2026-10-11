@@ -6,7 +6,7 @@
     "message": "打开 ChatGraph"
   },
   "refresh": {
-    "message": "刷新"
+    "message": "同步当前对话"
   },
   "collapseChains": {
     "message": "折叠长链"
@@ -72,19 +72,43 @@
     "message": " · 已暂停"
   },
   "indexHint": {
-    "message": "扫描已有对话，找出历史分支。"
+    "message": "扫描范围覆盖全部历史，每次点击最多扫描 5 个对话后暂停，点击继续扫描下一批。遇到限流立即停止，直到你点击继续。"
   },
   "indexPause": {
     "message": "暂停扫描"
   },
   "indexRestart": {
-    "message": "重新扫描"
+    "message": "重扫全部历史"
   },
   "indexStart": {
-    "message": "扫描历史"
+    "message": "扫描全部历史"
   },
   "indexResume": {
     "message": "继续扫描"
+  },
+  "indexRateLimited": {
+    "message": "请求频率受限，请在需要重试时点击继续扫描。"
+  },
+  "indexStopped": {
+    "message": "扫描已停止。"
+  },
+  "syncMore": {
+    "message": "还有来源对话待更新，点击同步当前对话继续。"
+  },
+  "scanSettings": {
+    "message": "扫描设置"
+  },
+  "scanInterval": {
+    "message": "历史扫描请求间隔"
+  },
+  "scanThreeSeconds": {
+    "message": "3 秒"
+  },
+  "scanFourSeconds": {
+    "message": "4 秒（默认）"
+  },
+  "scanFiveSeconds": {
+    "message": "5 秒"
   },
   "indexError": {
     "message": "扫描已暂停：$1"
