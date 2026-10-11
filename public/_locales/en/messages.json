@@ -24,7 +24,7 @@
     "message": "$1 conversations · $2 messages"
   },
   "syncing": {
-    "message": " · Syncing"
+    "message": "Syncing"
   },
   "rootHint": {
     "message": "Different first-message versions start here"
@@ -46,6 +46,9 @@
   },
   "indexProgress": {
     "message": "Scanned $1/$2 conversations"
+  },
+  "indexProgressCompact": {
+    "message": "Scanned $1/$2"
   },
   "indexDone": {
     "message": " · Done"
@@ -83,14 +86,35 @@
   "fit": {
     "message": "Fit to view"
   },
+  "fitCompact": {
+    "message": "Fit"
+  },
   "legend": {
     "message": "Green: current chat path · Dashed: branches · Drag empty space to pan"
   },
   "detailsHint": {
     "message": "Click a message to revisit it."
   },
+  "previewTitle": {
+    "message": "Preview"
+  },
+  "resizePreview": {
+    "message": "Resize preview"
+  },
+  "collapsePreview": {
+    "message": "Collapse preview"
+  },
   "language": {
     "message": "Interface language"
+  },
+  "settingsTitle": {
+    "message": "ChatGraph Settings"
+  },
+  "settingsHint": {
+    "message": "Changes are saved automatically and applied to the side panel. Conversation text stays in its original language."
+  },
+  "graphControls": {
+    "message": "Graph controls"
   },
   "automatic": {
     "message": "Browser default"

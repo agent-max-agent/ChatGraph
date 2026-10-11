@@ -4,9 +4,10 @@ import { cp, mkdir } from 'node:fs/promises';
 
 await mkdir('dist', { recursive: true });
 await cp('public', 'dist', { recursive: true });
+await cp('LICENSE', 'dist/LICENSE');
 
 const options: BuildOptions = {
-  entryPoints: ['src/background.ts', 'src/content.ts', 'src/panel.ts'],
+  entryPoints: ['src/background.ts', 'src/content.ts', 'src/panel.ts', 'src/options.ts'],
   bundle: true,
   outdir: 'dist',
   format: 'esm',

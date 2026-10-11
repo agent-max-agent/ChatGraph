@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+  padding: 32px 20px;
+}
+main {
+  max-width: 480px;
+  margin: auto;
+}
+h1 {
+  font-size: 20px;
+  margin: 0 0 24px;
+}
+label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+select {
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

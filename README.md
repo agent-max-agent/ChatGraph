@@ -1,51 +1,90 @@
 # ChatGraph
 
-ChatGraph 是一个 Chrome / Edge 扩展，用树状图展示 ChatGPT 对话的分支。点击图中的消息，可以跳转到对应位置，方便比较不同版本、继续之前的对话。
+**English** | [简体中文](README.zh_CN.md)
 
-## 安装和使用
+Explore ChatGPT conversation branches as a tree in a Chrome / Edge side panel. Click a message to revisit it, compare alternate paths, and continue an earlier conversation.
 
-1. 从 [GitHub Releases](https://github.com/agent-max-agent/ChatGraph/releases) 下载扩展压缩包并解压。
-2. 打开 `edge://extensions/` 或 `chrome://extensions/`，开启开发者模式，点击“加载解压缩的扩展”，选择解压后的目录。
-3. 登录 `chatgpt.com` 并打开一个对话，点击工具栏上的 ChatGraph 图标，展开侧栏。
+[![Release](https://img.shields.io/github/v/release/agent-max-agent/ChatGraph?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/agent-max-agent/ChatGraph/total?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases)
+[![Chrome / Edge](https://img.shields.io/badge/browser-Chrome%20%2F%20Edge-4285F4?style=flat)](#installation)
 
-界面支持中文和英文，默认跟随浏览器语言，也可以在侧栏右上角手动切换。语言选择会保存在本机，聊天内容保持原文。
+## Preview
 
-## 本地开发
+| Conversation branches | Selected message |
+| --- | --- |
+| ![ChatGraph's English interface showing a conversation tree with the current path in green and dashed branch connections](docs/images/branch-graph.png) | ![ChatGraph's interface showing a selected message and its full text below the graph](docs/images/message-details.png) |
 
-需要 Node.js 24 和 npm。
+## Features
+
+- View the current conversation and related branches, with one node per message. The current path is green; dashed lines connect branches.
+- Click a message in the current conversation to scroll to it. Click a message in another saved branch to open that conversation and locate the message.
+- Open ChatGPT's native Versions dialog to locate an older message version within the same conversation.
+- See newly created branches as drafts. Once you send a message and ChatGPT saves the conversation, ChatGraph remembers the branch for later navigation.
+- Scan history to find branches created before installing the extension. Pause and resume the scan, with progress saved locally.
+- Automatically scroll to load messages that are not yet visible before locating them.
+- Read selected messages in a floating bottom preview. Drag its top edge to resize it, or collapse it completely. Reopening restores its previous height while the graph fills the main area.
+- Automatically follow your system's light or dark color scheme, including changes while the side panel is open.
+
+A new branch remains a temporary ChatGPT draft until you send a message and the conversation is saved. Leaving or refreshing the page may lose the draft. Saved conversations can be reopened using their conversation IDs. ChatGraph does not intercept or modify ChatGPT's native “Branch in new chat” action. Use ChatGraph to switch between existing branches.
+
+## Installation
+
+### Option 1: Download a release
+
+1. Open [GitHub Releases](https://github.com/agent-max-agent/ChatGraph/releases/latest) and download the extension ZIP from **Assets**.
+2. Extract the ZIP into a folder you will keep on your computer.
+3. Open `edge://extensions/` or `chrome://extensions/`, enable **Developer mode**, and choose **Load unpacked**. Select the extracted folder containing `manifest.json`.
+
+### Option 2: Build from source
+
+Requires Git, Node.js 24, and npm.
 
 ```sh
+git clone https://github.com/agent-max-agent/ChatGraph.git
+cd ChatGraph
 npm install
+npm run build
+```
+
+Open `edge://extensions/` or `chrome://extensions/`, enable **Developer mode**, and choose **Load unpacked**. Select the generated `dist/` folder.
+
+### Open ChatGraph
+
+Sign in to `chatgpt.com`, open a conversation, and click the ChatGraph toolbar icon to open the side panel.
+
+The interface supports English and Simplified Chinese. It follows your browser language by default. To change it, open ChatGraph's details on the extensions page and select **Extension options**. Your selection is saved locally, and conversation text stays in its original language.
+
+## Data and compatibility
+
+Conversation data and branch relationships are stored locally and are not uploaded to other services. The extension reads data using your current ChatGPT session and does not store access tokens. It relies on ChatGPT's internal APIs, so website updates may require compatibility changes.
+
+## Local development
+
+After installing from source, use these commands to check and rebuild your changes:
+
+```sh
 npm run check
 npm run build
 npm test
 ```
 
-构建后，按上面的安装步骤加载 `dist/`。
+After changing code, rebuild, reload the extension on the extensions page, and refresh the ChatGPT page. `npm run dev` watches TypeScript files; changes to HTML, CSS, or translation files require a new build.
 
-修改代码后，先重新构建并在扩展管理页重新加载扩展，再刷新 ChatGPT 页面。`npm run dev` 会监听 TypeScript 文件变化；修改 HTML、样式或翻译文件后需重新构建。
+`npm run check` checks types and code style; `npm run lint:fix` fixes formatting. Translation catalogs are in `public/_locales/en/messages.json` and `public/_locales/zh_CN/messages.json`.
 
-`npm run check` 检查类型和代码规范，`npm run lint:fix` 自动修正格式。翻译文件位于 `public/_locales/en/messages.json` 和 `public/_locales/zh_CN/messages.json`。
+## Project structure
 
-## 功能
+- `src/`: TypeScript source for the background worker, page interaction, message tree, and side panel.
+- `public/`: Extension manifest, side-panel HTML, styles, and translations.
+- `scripts/`: Build scripts.
+- `tests/`: Message-tree and localization tests.
+- `docs/images/`: README screenshots.
+- `temp/`: Local temporary files, excluded from the extension.
 
-- 展示当前对话及相关分支，每条消息对应一个节点。绿色标出当前聊天路径，虚线连接分支。
-- 点击当前对话中的消息，滚动到对应位置；点击其他已保存分支中的消息，打开那个对话并定位。
-- 点击同一对话中的旧版本消息，打开 ChatGPT 自带的 Versions 窗口，找到对应版本。
-- 新建分支后先显示草稿；发送消息并保存后，扩展会记住这个分支，方便以后打开。
-- 点击“扫描历史”，找出安装扩展前创建的分支。扫描可以暂停、继续，进度保存在本机。
-- 如果目标消息尚未加载，扩展会自动滚动聊天记录，加载后再定位。
+## Authors
 
-新建分支后如果还没发送消息，它只是 ChatGPT 的临时草稿。离开或刷新页面后，草稿不一定能恢复；发送消息并保存后，才能通过保存后的对话 ID 再次打开。ChatGraph 不会拦截或修改 ChatGPT 自带的“Branch in new chat”操作。
+Developed by [**Agent Max**](https://github.com/agent-max-agent) (GPT-6.1-Sol) with guidance from [**SaturnTsen**](https://github.com/SaturnTsen).
 
-## 数据和兼容性
+## License
 
-对话数据和分支关系保存在本地，不会上传到其他服务。扩展使用 ChatGPT 当前的登录状态读取数据，不保存访问令牌。由于使用了 ChatGPT 内部接口，网站更新后扩展可能需要重新适配。
-
-## 项目结构
-
-- `src/`：TypeScript 源码，包括后台、页面交互、消息树和侧栏。
-- `public/`：扩展配置、侧栏 HTML、样式和翻译文件。
-- `scripts/`：构建与代码检查脚本。
-- `tests/`：消息树和多语言测试。
-- `temp/`：本地临时文件，不包含在扩展中。
+Licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-only).

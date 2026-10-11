@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  --surface: #f6f8f7;
+  --text: #202824;
+  --control: #e9eeeb;
+  --border: #b4c1b9;
+  --divider: #d3ddd7;
+  --hover: #428b69;
+  --muted: #52625a;
+  --secondary: #63766a;
+  --grid: #d2dbd6;
+  --node: #fff;
+  --active-border: #36865e;
+  --active-node: #e4f2e9;
+  --selection: #246d48;
+  --edge: #658573;
+  --fork-edge: #3e76b0;
+  --shadow: #0002;
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #181b1b;
+    --text: #e9efec;
+    --control: #282e2c;
+    --border: #46514c;
+    --divider: #303a35;
+    --hover: #8ecbb4;
+    --muted: #b4c2bb;
+    --secondary: #9caf9f;
+    --grid: #36403a;
+    --node: #242a27;
+    --active-border: #76ba9c;
+    --active-node: #233a2f;
+    --selection: #b1e7cd;
+    --edge: #749985;
+    --fork-edge: #93c5fd;
+    --shadow: #0005;
+  }
+}

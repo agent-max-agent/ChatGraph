@@ -56,6 +56,7 @@ class Coordinator {
     const tab = await chrome.tabs.get(tabId);
     const id = conversationId(tab.url!);
     this.states.set(tabId, { id, loading: true, error: null });
+    await chrome.storage.session.set({ [`tab:${tabId}`]: this.states.get(tabId) });
     let draft: Conversation | null = null;
     try {
       if (id?.startsWith('local-chatgpt:')) {

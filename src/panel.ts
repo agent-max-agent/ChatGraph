@@ -12,6 +12,7 @@ import { createTranslator, resolveLanguage, translatedError } from './i18n.js';
 import type { LanguagePreference, MessageKey } from './i18n.js';
 
 class Panel {
+  // Panel state.
   t = createTranslator(resolveLanguage('auto', chrome.i18n.getUILanguage()));
   tabId!: number;
   scale = 1;
@@ -21,7 +22,11 @@ class Panel {
   indexing = false;
   loadGeneration = 0;
   selectedNode?: GraphNode;
+  conversationContext?: string;
+  showScanProgress = false;
+  syncing = false;
 
+  // Language and UI text.
   title(text: string, kind?: Graph['titleKind']) {
     if (kind === 'unavailable') return this.t('unavailableTitle');
     if (kind === 'draft') return text ? this.t('draftTitle', [text]) : this.t('draftUntitled');
@@ -34,7 +39,6 @@ class Panel {
     const language = resolveLanguage(preference, chrome.i18n.getUILanguage());
     this.t = createTranslator(language);
     document.documentElement.lang = language === 'zh_CN' ? 'zh-CN' : 'en';
-    document.querySelector<HTMLSelectElement>('#language')!.value = preference;
     for (const element of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
       element.textContent = this.t(element.dataset.i18n as MessageKey);
     }
@@ -49,6 +53,7 @@ class Panel {
     await this.load();
   }
 
+  // Background communication and snapshot synchronization.
   async request<T = Snapshot>(message: CoordinatorMessage): Promise<T> {
     const result = await chrome.runtime.sendMessage<CoordinatorMessage, T & { error?: string }>({
       ...message,
@@ -62,12 +67,22 @@ class Panel {
     const generation = ++this.loadGeneration;
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.url?.startsWith('https://chatgpt.com/')) {
+      this.conversationContext = undefined;
+      this.showScanProgress = false;
+      this.syncing = false;
+      this.scanStatus('');
       document.querySelector<HTMLElement>('#status')!.textContent = this.t('openChat');
       return;
     }
     const result = await this.request({ type: 'snapshot', tabId: tab.id });
     if (generation !== this.loadGeneration) return;
     this.tabId = tab.id!;
+    const context = `${result.tabId}:${result.id ?? ''}`;
+    if (context !== this.conversationContext) {
+      this.conversationContext = context;
+      this.showScanProgress = false;
+    }
+    this.syncing = result.state?.id === result.id && result.state?.loading === true;
     this.indexStatus(result.index);
     const fingerprint = JSON.stringify([result.tabId, result.id, result.conversations]);
     const changed = fingerprint !== this.renderedState;
@@ -82,7 +97,7 @@ class Panel {
         : this.t('counts', [
             String(this.graph.conversationCount),
             String(this.graph.nodes.filter((node) => node.role !== 'root').length),
-          ]) + (result.state?.loading ? this.t('syncing') : ''));
+          ]));
     if (changed) {
       this.layout = layoutGraph(this.graph);
       this.scale = Math.min(
@@ -97,6 +112,14 @@ class Panel {
     }
   }
 
+  error(error: Error) {
+    document.querySelector<HTMLElement>('#status')!.textContent = translatedError(
+      error.message,
+      this.t,
+    );
+  }
+
+  // Graph rendering, selection, and navigation.
   render() {
     this.layout = layoutGraph(this.graph);
     const canvas = document.querySelector<HTMLElement>('#canvas')!;
@@ -119,7 +142,7 @@ class Panel {
         'd',
         `M${from.x + 56},${from.y + 80} C${from.x + 56},${from.y + 94} ${to.x + 56},${to.y - 14} ${to.x + 56},${to.y}`,
       );
-      path.setAttribute('stroke', edge.kind === 'fork' ? '#93c5fd' : '#749985');
+      path.setAttribute('stroke', edge.kind === 'fork' ? 'var(--fork-edge)' : 'var(--edge)');
       path.setAttribute('fill', 'none');
       path.setAttribute('stroke-width', '2');
       if (edge.kind === 'fork') path.setAttribute('stroke-dasharray', '5 4');
@@ -175,14 +198,37 @@ class Panel {
     });
   }
 
+  zoom(value: number) {
+    this.scale = value;
+    this.render();
+  }
+
+  // History scanning and progress display.
   indexStatus(progress?: IndexProgress) {
-    document.querySelector<HTMLElement>('#index-status')!.textContent = progress
-      ? this.t('indexProgress', [String(progress.completed), String(progress.total)]) +
-        this.t(progress.done ? 'indexDone' : this.indexing ? 'indexRunning' : 'indexPaused')
-      : this.t('indexHint');
+    if (this.syncing) {
+      this.scanStatus(this.t('syncing'));
+    } else if (progress && (this.showScanProgress || this.indexing || !progress.done)) {
+      const counts = [String(progress.completed), String(progress.total)];
+      const state = this.t(
+        progress.done ? 'indexDone' : this.indexing ? 'indexRunning' : 'indexPaused',
+      );
+      this.scanStatus(
+        this.t('indexProgressCompact', counts) + state,
+        this.t('indexProgress', counts) + state,
+      );
+    } else {
+      this.scanStatus('');
+    }
     document.querySelector<HTMLElement>('#index')!.textContent = this.t(
       this.indexing ? 'indexPause' : progress?.done ? 'indexRestart' : 'indexStart',
     );
+  }
+
+  scanStatus(text: string, description = text) {
+    const status = document.querySelector<HTMLElement>('#index-status')!;
+    status.textContent = text;
+    status.title = description;
+    status.setAttribute('aria-label', description);
   }
 
   async index() {
@@ -193,6 +239,7 @@ class Panel {
     }
     const saved = await this.request({ type: 'snapshot' });
     if (saved.index?.done) await this.request({ type: 'indexReset' });
+    this.showScanProgress = true;
     this.indexing = true;
     try {
       while (this.indexing) {
@@ -203,26 +250,12 @@ class Panel {
     } catch (error) {
       this.indexing = false;
       document.querySelector<HTMLElement>('#index')!.textContent = this.t('indexResume');
-      document.querySelector<HTMLElement>('#index-status')!.textContent = this.t('indexError', [
-        translatedError((error as Error).message, this.t),
-      ]);
+      this.scanStatus(this.t('indexError', [translatedError((error as Error).message, this.t)]));
     }
-  }
-
-  zoom(value: number) {
-    this.scale = value;
-    this.render();
-  }
-
-  error(error: Error) {
-    document.querySelector<HTMLElement>('#status')!.textContent = translatedError(
-      error.message,
-      this.t,
-    );
   }
 }
 
-const panel = new Panel();
+// Drag the graph without changing its layout.
 function enablePanning() {
   const viewport = document.querySelector<HTMLElement>('#viewport')!;
   let origin: { x: number; y: number; left: number; top: number } | null;
@@ -247,7 +280,74 @@ function enablePanning() {
     viewport.classList.remove('panning');
   });
 }
+// Resize, collapse, and reopen the floating preview.
+function enablePreviewResize() {
+  const workspace = document.querySelector<HTMLElement>('#workspace')!;
+  const preview = document.querySelector<HTMLElement>('#preview')!;
+  const resizer = document.querySelector<HTMLElement>('#preview-resizer')!;
+  const opener = document.querySelector<HTMLButtonElement>('#preview-open')!;
+  const closer = document.querySelector<HTMLButtonElement>('#preview-close')!;
+  let expandedHeight = 180;
+  let origin: { y: number; height: number } | null = null;
+
+  function resize(height: number) {
+    const maximum = workspace.clientHeight;
+    const value = height < 48 ? 0 : Math.round(Math.min(height, maximum));
+    if (value > 0) expandedHeight = value;
+    workspace.style.setProperty('--preview-height', `${value}px`);
+    preview.hidden = value === 0;
+    opener.hidden = value !== 0;
+    resizer.setAttribute('aria-valuemin', '0');
+    resizer.setAttribute('aria-valuemax', String(maximum));
+    resizer.setAttribute('aria-valuenow', String(value));
+    if (value === 0 && preview.contains(document.activeElement)) opener.focus();
+  }
+
+  closer.addEventListener('click', () => resize(0));
+  opener.addEventListener('click', () => {
+    resize(expandedHeight);
+    resizer.focus();
+  });
+  resizer.addEventListener('dblclick', () => resize(0));
+
+  resizer.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    origin = { y: event.clientY, height: preview.getBoundingClientRect().height };
+    resizer.setPointerCapture(event.pointerId);
+  });
+  resizer.addEventListener('pointermove', (event) => {
+    if (origin) resize(origin.height + origin.y - event.clientY);
+  });
+  resizer.addEventListener('lostpointercapture', () => {
+    origin = null;
+  });
+  resizer.addEventListener('keydown', (event) => {
+    const height = preview.getBoundingClientRect().height;
+    switch (event.key) {
+      case 'ArrowUp':
+        resize(height + 24);
+        break;
+      case 'ArrowDown':
+        resize(height - 24);
+        break;
+      case 'Home':
+        resize(0);
+        break;
+      case 'End':
+        resize(workspace.clientHeight);
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  });
+  new ResizeObserver(() => resize(preview.getBoundingClientRect().height)).observe(workspace);
+}
+
+// Bind controls and browser events, then load the initial view.
+const panel = new Panel();
 enablePanning();
+enablePreviewResize();
 document
   .querySelector<HTMLElement>('#refresh')!
   .addEventListener('click', () => panel.load(true).catch((error: Error) => panel.error(error)));
@@ -284,9 +384,10 @@ chrome.storage.onChanged.addListener((changes) => {
 chrome.tabs.onActivated.addListener(() =>
   panel.load(true).catch((error: Error) => panel.error(error)),
 );
-document.querySelector<HTMLSelectElement>('#language')!.addEventListener('change', (event) => {
-  const language = (event.target as HTMLSelectElement).value as LanguagePreference;
-  chrome.storage.local.set({ language });
+chrome.tabs.onUpdated.addListener((tabId, changes) => {
+  if (tabId === panel.tabId && changes.url) {
+    panel.load().catch((error: Error) => panel.error(error));
+  }
 });
 panel
   .language()

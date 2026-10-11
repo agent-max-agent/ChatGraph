@@ -1,20 +1,64 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ChatGraph</title>
-  <link rel="stylesheet" href="panel.css">
-</head>
-<body>
-  <header><strong>ChatGraph</strong><div id="header-actions"><select id="language" data-i18n-aria="language"><option value="auto" data-i18n="automatic"></option><option value="zh_CN">中文</option><option value="en">English</option></select><button id="refresh" data-i18n="refresh"></button></div></header>
-  <h1 id="title" data-i18n="branches"></h1>
-  <p id="status" role="status" data-i18n="initialStatus"></p>
-  <div id="index-controls"><button id="index" data-i18n="indexStart"></button><span id="index-status" role="status" data-i18n="indexHint"></span></div>
-  <nav><button id="out" data-i18n-aria="zoomOut">−</button><button id="fit" data-i18n="fit"></button><button id="in" data-i18n-aria="zoomIn">+</button></nav>
-  <p id="legend" data-i18n="legend"></p>
-  <div id="viewport"><div id="stage"><div id="canvas"><svg id="edges" aria-hidden="true"></svg><div id="nodes"></div></div></div></div>
-  <section id="details"><p data-i18n="detailsHint"></p></section>
-  <script type="module" src="panel.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ChatGraph</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header>
+      <div class="conversation-summary">
+        <h1 id="title" data-i18n="branches"></h1>
+        <p id="status" role="status" data-i18n="initialStatus"></p>
+      </div>
+      <p id="legend" data-i18n="legend"></p>
+      <p id="index-status" role="status" tabindex="0"></p>
+    </header>
+    <main id="workspace">
+      <div id="viewport">
+        <div id="stage">
+          <div id="canvas">
+            <svg id="edges" aria-hidden="true"></svg>
+            <div id="nodes"></div>
+          </div>
+        </div>
+      </div>
+      <nav class="toolbar" data-i18n-aria="graphControls">
+        <div class="scan-controls">
+          <button id="refresh" data-i18n="refresh"></button>
+          <button id="index" data-i18n="indexStart"></button>
+        </div>
+        <div class="zoom-controls">
+          <button id="out" data-i18n-aria="zoomOut">−</button>
+          <button id="fit" data-i18n="fitCompact" data-i18n-aria="fit"></button>
+          <button id="in" data-i18n-aria="zoomIn">+</button>
+        </div>
+      </nav>
+      <section id="preview" aria-labelledby="preview-title">
+        <div
+          id="preview-resizer"
+          role="separator"
+          tabindex="0"
+          aria-orientation="horizontal"
+          aria-controls="preview"
+          data-i18n-aria="resizePreview"
+        ></div>
+        <div class="preview-heading">
+          <h2 id="preview-title" data-i18n="previewTitle"></h2>
+          <button id="preview-close" data-i18n-aria="collapsePreview">×</button>
+        </div>
+        <div id="details"><p data-i18n="detailsHint"></p></div>
+      </section>
+      <button
+        id="preview-open"
+        hidden
+        aria-controls="preview"
+        aria-expanded="false"
+        data-i18n="previewTitle"
+      ></button>
+    </main>
+    <script type="module" src="panel.js"></script>
+  </body>
 </html>

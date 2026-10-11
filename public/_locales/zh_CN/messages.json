@@ -24,7 +24,7 @@
     "message": "$1 个对话 · $2 条消息"
   },
   "syncing": {
-    "message": " · 正在同步"
+    "message": "正在同步"
   },
   "rootHint": {
     "message": "不同的首轮消息从这里展开"
@@ -45,6 +45,9 @@
     "message": "附件消息"
   },
   "indexProgress": {
+    "message": "已扫描 $1/$2 个对话"
+  },
+  "indexProgressCompact": {
     "message": "已扫描 $1/$2 个对话"
   },
   "indexDone": {
@@ -83,14 +86,35 @@
   "fit": {
     "message": "适应窗口"
   },
+  "fitCompact": {
+    "message": "适应"
+  },
   "legend": {
     "message": "绿色：当前聊天路径 · 虚线：分支 · 拖动空白处移动视图"
   },
   "detailsHint": {
     "message": "点击消息，回到对应的聊天记录。"
   },
+  "previewTitle": {
+    "message": "预览"
+  },
+  "resizePreview": {
+    "message": "调整预览高度"
+  },
+  "collapsePreview": {
+    "message": "收起预览"
+  },
   "language": {
     "message": "界面语言"
+  },
+  "settingsTitle": {
+    "message": "ChatGraph 设置"
+  },
+  "settingsHint": {
+    "message": "修改会自动保存并应用到侧栏，对话内容保持原文。"
+  },
+  "graphControls": {
+    "message": "图操作"
   },
   "automatic": {
     "message": "跟随浏览器"
