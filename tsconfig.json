@@ -19,6 +19,7 @@
     "allowImportingTsExtensions": true
   },
   "include": [
+    "eslint.config.ts",
     "src/**/*.ts",
     "tests/**/*.ts",
     "scripts/**/*.ts"

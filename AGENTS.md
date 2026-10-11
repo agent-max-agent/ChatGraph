@@ -21,6 +21,10 @@
 
 ## 软件工程规范
 
+- 源码、构建脚本和测试使用 TypeScript 严格模式，不使用 `any`；由 ESLint 的 `@typescript-eslint/no-explicit-any` 规则检查。
+- 代码风格由 `eslint.config.ts` 统一配置：2 空格缩进、单引号、分号、100 字符换行。使用 `npm run lint:fix` 自动修正，提交前运行 `npm run check`、`npm test` 和 `npm run build`。
+- README 只呈现项目功能、使用方法和必要开发说明；工作约束写在 AGENTS.md，探索记录和临时草稿放在 temp/。
+
 - 遵循软件工程规范，职责清晰，保持实现简单。
 - 不进行防御性编程。
 - 不使用嵌套 `try-catch`。

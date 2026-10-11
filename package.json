@@ -7,12 +7,21 @@
     "build": "node --experimental-strip-types scripts/build.ts",
     "dev": "node --experimental-strip-types scripts/build.ts --watch",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "check": "tsc --noEmit && node --experimental-strip-types scripts/check-types.ts"
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix --max-warnings 0",
+    "check": "tsc --noEmit && npm run lint"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chrome": "^0.3.5",
     "@types/node": "^26.6.5",
     "esbuild": "0.28.2",
-    "typescript": "^5.9.3"
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1"
   }
 }

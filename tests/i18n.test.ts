@@ -12,7 +12,10 @@ test('browser language resolves to a supported language and explicit choice take
 });
 
 test('catalogs have matching keys and positional substitutions', () => {
-  const en = JSON.parse(readFileSync('public/_locales/en/messages.json', 'utf8')) as Record<string, { message: string }>;
+  const en = JSON.parse(readFileSync('public/_locales/en/messages.json', 'utf8')) as Record<
+    string,
+    { message: string }
+  >;
   const zh = JSON.parse(readFileSync('public/_locales/zh_CN/messages.json', 'utf8')) as typeof en;
   assert.deepEqual(Object.keys(en).sort(), Object.keys(zh).sort());
   for (const key of Object.keys(en)) {
@@ -23,7 +26,13 @@ test('catalogs have matching keys and positional substitutions', () => {
 });
 
 test('persisted error codes translate in the newly selected language and external errors remain readable', () => {
-  assert.equal(translatedError('conversationLoad|403', createTranslator('en')), 'Could not load the conversation (403). Try again.');
-  assert.equal(translatedError('conversationLoad|403', createTranslator('zh_CN')), '对话加载失败（403），请重试。');
+  assert.equal(
+    translatedError('conversationLoad|403', createTranslator('en')),
+    'Could not load the conversation (403). Try again.',
+  );
+  assert.equal(
+    translatedError('conversationLoad|403', createTranslator('zh_CN')),
+    '对话加载失败（403），请重试。',
+  );
   assert.equal(translatedError('Failed to fetch', createTranslator('zh_CN')), 'Failed to fetch');
 });
