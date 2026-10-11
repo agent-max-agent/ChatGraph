@@ -380,25 +380,39 @@ function enablePreviewResize() {
 const panel = new Panel();
 enablePanning();
 enablePreviewResize();
-document.querySelector<HTMLElement>('#viewport')!.addEventListener(
-  'wheel',
-  (event) => {
-    if (!event.ctrlKey && !event.altKey) return;
-    event.preventDefault();
-    if (!event.ctrlKey) {
-      const viewport = event.currentTarget as HTMLElement;
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
-      viewport.scrollBy((event.deltaY || event.deltaX) * unit, 0);
-      return;
-    }
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
-    panel.zoom(Math.max(0.3, Math.min(2, panel.scale * Math.exp(-event.deltaY * unit * 0.002))), {
-      x: event.clientX,
-      y: event.clientY,
-    });
-  },
-  { passive: false },
-);
+function enableWheel(panel: Panel) {
+  const viewport = document.querySelector<HTMLElement>('#viewport')!;
+  let horizontalTarget = viewport.scrollLeft;
+  viewport.addEventListener('scrollend', () => {
+    horizontalTarget = viewport.scrollLeft;
+  });
+  viewport.addEventListener(
+    'wheel',
+    (event) => {
+      if (!event.ctrlKey && !event.altKey) return;
+      event.preventDefault();
+      if (!event.ctrlKey) {
+        const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
+        horizontalTarget = Math.max(
+          0,
+          Math.min(
+            viewport.scrollWidth - viewport.clientWidth,
+            horizontalTarget + (event.deltaY || event.deltaX) * unit,
+          ),
+        );
+        viewport.scrollTo({ left: horizontalTarget, behavior: 'smooth' });
+        return;
+      }
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+      panel.zoom(Math.max(0.3, Math.min(2, panel.scale * Math.exp(-event.deltaY * unit * 0.002))), {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    { passive: false },
+  );
+}
+enableWheel(panel);
 document
   .querySelector<HTMLElement>('#refresh')!
   .addEventListener('click', () => panel.load(true).catch((error: Error) => panel.error(error)));
