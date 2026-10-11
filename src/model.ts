@@ -27,6 +27,7 @@ export function projectConversation(data: ConversationData): Conversation {
         (node) =>
           node.message &&
           ['user', 'assistant'].includes(node.message.author.role) &&
+          (!node.message.recipient || node.message.recipient === 'all') &&
           !node.message.metadata.is_visually_hidden_from_conversation,
       )
       .map((node) => node.id),
@@ -38,14 +39,30 @@ export function projectConversation(data: ConversationData): Conversation {
       let parent = node.parent;
       while (parent && !visible.has(parent)) parent = data.mapping[parent].parent;
       const message = node.message!;
-      const text = (message.content.parts ?? [])
-        .filter((part) => typeof part === 'string')
-        .join('\n');
+      const content = message.content;
+      const text =
+        content.content_type === 'thoughts'
+          ? (content.thoughts ?? []).map((thought) => thought.summary).join('\n')
+          : content.content_type === 'reasoning_recap'
+            ? (content.content ?? '')
+            : (content.parts ?? []).filter((part) => typeof part === 'string').join('\n');
+      const hasAttachments =
+        Boolean(message.metadata.attachments?.length) ||
+        (content.parts ?? []).some(
+          (part) =>
+            typeof part === 'object' &&
+            part !== null &&
+            'content_type' in part &&
+            ['image_asset_pointer', 'input_audio', 'audio', 'video'].includes(
+              String(part.content_type),
+            ),
+        );
       return {
         id: node.id,
         parent,
         role: message.author.role as Role,
         text: text.replace(/<\/?WritingBlock[^>]*>/g, ''),
+        hasAttachments,
         branchSource: message.metadata.branching_from_conversation_id ?? null,
         createdAt: message.create_time,
       };

@@ -3,6 +3,79 @@ import assert from 'node:assert/strict';
 import { projectConversation, buildGraph, navigationPlan } from '../src/model.ts';
 import type { RawNode, Role } from '../src/types.js';
 
+test('public thinking summaries and recaps retain content while tool calls are omitted', () => {
+  const prompt = message('prompt', null, 'user');
+  const tool = message('tool', 'prompt', 'assistant');
+  tool.message!.recipient = 'web.run';
+  tool.message!.content = { content_type: 'text', parts: [''] };
+  const thoughts = message('thoughts', 'tool', 'assistant');
+  thoughts.message!.recipient = 'all';
+  thoughts.message!.content = {
+    content_type: 'thoughts',
+    thoughts: [{ summary: 'Checking the serving architecture' }],
+  };
+  const recap = message('recap', 'thoughts', 'assistant');
+  recap.message!.content = { content_type: 'reasoning_recap', content: 'Thought for 15 seconds' };
+  const answer = message('answer', 'recap', 'assistant');
+  const conversation = projectConversation({
+    id: 'reference',
+    title: 'Inference service',
+    currentNode: 'answer',
+    mapping: { prompt, tool, thoughts, recap, answer },
+  });
+  assert.deepEqual(
+    conversation.nodes.map((node) => node.id),
+    ['prompt', 'thoughts', 'recap', 'answer'],
+  );
+  assert.equal(conversation.nodes[1].text, 'Checking the serving architecture');
+  assert.equal(conversation.nodes[1].parent, 'prompt');
+  assert.equal(conversation.nodes[2].text, 'Thought for 15 seconds');
+  assert.ok(conversation.nodes.every((node) => !node.hasAttachments));
+  assert.deepEqual(conversation.activePath, ['prompt', 'thoughts', 'recap', 'answer']);
+});
+
+test('empty and unsupported messages do not imply attachments, while actual attachments remain identified', () => {
+  const empty = message('empty', null, 'assistant');
+  empty.message!.content = { content_type: 'text', parts: [''] };
+  const unknown = message('unknown', 'empty', 'assistant');
+  unknown.message!.content = {
+    content_type: 'future_format',
+    parts: [{ value: 'structured data' }],
+  };
+  const image = message('image', 'unknown', 'user');
+  image.message!.content = {
+    content_type: 'multimodal_text',
+    parts: [{ content_type: 'image_asset_pointer', asset_pointer: 'image' }],
+  };
+  const file = message('file', 'image', 'user', { attachments: [{ name: 'notes.pdf' }] });
+  file.message!.content = { content_type: 'text', parts: [''] };
+  const caption = message('caption', 'file', 'user', { attachments: [{ name: 'photo.png' }] });
+  caption.message!.content = {
+    content_type: 'multimodal_text',
+    parts: [
+      'Compare these photographs.',
+      { content_type: 'image_asset_pointer', asset_pointer: 'photo' },
+    ],
+  };
+  const conversation = projectConversation({
+    id: 'attachments',
+    title: 'Files',
+    currentNode: 'caption',
+    mapping: { empty, unknown, image, file, caption },
+  });
+  assert.deepEqual(
+    conversation.nodes.map((node) => node.hasAttachments),
+    [false, false, true, true, true],
+  );
+  assert.equal(conversation.nodes.at(-1)!.text, 'Compare these photographs.');
+  assert.deepEqual(
+    buildGraph([conversation], conversation.id)
+      .nodes.filter((node) => node.role !== 'root')
+      .map((node) => node.hasAttachments),
+    [false, false, true, true, true],
+  );
+});
+
 function message(
   id: string,
   parent: string | null,
