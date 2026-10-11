@@ -3,7 +3,8 @@ import type { ConversationData, PageRequest, PageResult } from './types.js';
 export async function readChatGPT(request: PageRequest): Promise<PageResult> {
   try {
     const sessionResponse = await fetch('/api/auth/session', { credentials: 'include' });
-    if (!sessionResponse.ok) throw new Error(`sessionLoad|${sessionResponse.status}`);
+    if (!sessionResponse.ok)
+      return { error: `sessionLoad|${sessionResponse.status}`, status: sessionResponse.status };
     const session = (await sessionResponse.json()) as { accessToken?: string };
     if (!session.accessToken) throw new Error('signIn');
 

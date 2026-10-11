@@ -35,14 +35,18 @@ class Coordinator {
     return result as T;
   }
 
-  async collect(tabId: number, id: string, visited = new Set<string>()) {
+  async collect(
+    tabId: number,
+    id: string,
+    visited = new Set<string>(),
+    read = (request: PageRequest) => this.read<ConversationData>(tabId, request),
+  ) {
     if (visited.has(id)) return;
     visited.add(id);
-    const conversation = projectConversation(
-      await this.read<ConversationData>(tabId, { kind: 'conversation', id }),
-    );
+    const conversation = projectConversation(await read({ kind: 'conversation', id }));
     await chrome.storage.local.set({ [`conversation:${id}`]: conversation });
-    if (conversation.fork) await this.collect(tabId, conversation.fork.branchSource!, visited);
+    if (conversation.fork)
+      await this.collect(tabId, conversation.fork.branchSource!, visited, read);
   }
 
   async sync(tabId: number) {
@@ -112,8 +116,32 @@ class Coordinator {
       done: false,
     };
     if (progress.done) return progress;
+    try {
+      return await this.advanceIndex(tabId, progress);
+    } catch (error) {
+      if ((error as { status?: number }).status !== 429) throw error;
+      return progress;
+    }
+  }
+
+  async advanceIndex(tabId: number, progress: IndexProgress) {
+    const read = async <T extends PageResult>(request: PageRequest): Promise<T> => {
+      const remaining = (progress.nextRequestAt ?? 0) - Date.now();
+      if (remaining > 0) await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+      try {
+        return await this.read<T>(tabId, request);
+      } catch (error) {
+        if ((error as { status?: number }).status === 429) {
+          progress.requestInterval = (progress.requestInterval ?? 500) * 2;
+        }
+        throw error;
+      } finally {
+        progress.nextRequestAt = Date.now() + (progress.requestInterval ?? 500);
+        await chrome.storage.local.set({ historyIndex: progress });
+      }
+    };
     if (progress.cursor === progress.ids.length) {
-      const page = await this.read<{ ids: string[]; total: number }>(tabId, {
+      const page = await read<{ ids: string[]; total: number }>({
         kind: 'list',
         offset: progress.offset,
       });
@@ -125,7 +153,7 @@ class Coordinator {
     }
     if (!progress.done) {
       try {
-        await this.collect(tabId, progress.ids[progress.cursor]);
+        await this.collect(tabId, progress.ids[progress.cursor], new Set(), read<ConversationData>);
       } catch (error) {
         const failure = error as Error & { status?: number; conversationId: string };
         if (failure.status !== 404) throw error;
