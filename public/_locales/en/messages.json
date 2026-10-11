@@ -165,7 +165,7 @@
     "message": "Local cache"
   },
   "cacheHint": {
-    "message": "Inspect stored conversations and scan progress. Clearing only removes local data, preserves settings, and stops any current scan."
+    "message": "Inspect stored conversations and scan progress. Clearing only removes current local data and preserves settings. Normal synchronization and scans may cache data again."
   },
   "cacheInspect": {
     "message": "Inspect cache"
@@ -193,9 +193,6 @@
   },
   "cacheConfirm": {
     "message": "Clear all local conversations and scan progress? Your settings and ChatGPT conversations will be preserved."
-  },
-  "cacheCleared": {
-    "message": "The cache was cleared. Start a new scan to continue."
   },
   "cacheClearComplete": {
     "message": "Cleared entries: $1."

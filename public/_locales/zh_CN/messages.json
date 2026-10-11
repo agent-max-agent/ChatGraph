@@ -165,7 +165,7 @@
     "message": "本地缓存"
   },
   "cacheHint": {
-    "message": "查看保存的对话与扫描进度。清除仅删除本地数据，保留设置，并停止当前扫描。"
+    "message": "查看保存的对话与扫描进度。清除仅删除当前本地数据并保留设置。正常同步和扫描会继续缓存数据。"
   },
   "cacheInspect": {
     "message": "查看缓存"
@@ -193,9 +193,6 @@
   },
   "cacheConfirm": {
     "message": "清除全部本地对话缓存和扫描进度？设置与 ChatGPT 上的对话将保留。"
-  },
-  "cacheCleared": {
-    "message": "缓存已清除。请重新开始扫描。"
   },
   "cacheClearComplete": {
     "message": "已清除 $1 个缓存项。"

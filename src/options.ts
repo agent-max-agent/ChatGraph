@@ -1,6 +1,6 @@
 import { createTranslator, resolveLanguage, translatedError } from './i18n.js';
 import type { LanguagePreference, MessageKey, Translator } from './i18n.js';
-import type { Conversation, CoordinatorMessage, IndexProgress } from './types.js';
+import type { Conversation, IndexProgress } from './types.js';
 
 interface CacheEntry {
   key: string;
@@ -133,15 +133,14 @@ class Settings {
     this.status = '';
     status.textContent = '';
     try {
-      const result = await chrome.runtime.sendMessage<
-        CoordinatorMessage,
-        { cleared: number; error?: string }
-      >({
-        type: 'cacheClear',
-        ...(all ? {} : { keys: [...this.selected] }),
-      });
-      if (result.error) throw new Error(result.error);
-      this.status = `cacheClearComplete|${result.cleared}`;
+      const values = await chrome.storage.local.get(null);
+      const keys = Object.keys(values).filter(
+        (key) =>
+          (key.startsWith('conversation:') || key === 'historyIndex') &&
+          (all || this.selected.has(key)),
+      );
+      await chrome.storage.local.remove(keys);
+      this.status = `cacheClearComplete|${keys.length}`;
     } catch (error) {
       this.status = (error as Error).message;
     } finally {

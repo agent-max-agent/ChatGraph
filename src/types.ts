@@ -132,7 +132,6 @@ export interface Snapshot {
 }
 
 export type CoordinatorMessage =
-  | { type: 'cacheClear'; keys?: string[] }
   | {
       type: 'sync' | 'snapshot' | 'indexStep' | 'indexReset' | 'ready' | 'navigated';
       tabId?: number;
