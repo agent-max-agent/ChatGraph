@@ -20,6 +20,7 @@ class Panel {
   layout!: Layout;
   renderedState?: string;
   indexing = false;
+  scanGeneration = 0;
   loadGeneration = 0;
   selectedNode?: GraphNode;
   conversationContext?: string;
@@ -46,6 +47,7 @@ class Panel {
     for (const element of document.querySelectorAll<HTMLElement>('[data-i18n-aria]')) {
       element.setAttribute('aria-label', this.t(element.dataset.i18nAria as MessageKey));
     }
+    document.querySelector<HTMLElement>('#index')!.title = this.t('indexHint');
     if (this.graph) this.render();
     if (this.selectedNode) {
       document.querySelector<HTMLElement>('#details')!.textContent =
@@ -64,10 +66,13 @@ class Panel {
     return result;
   }
 
-  async load(refresh = false) {
+  async load(refresh = false, manual = false) {
     const generation = ++this.loadGeneration;
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.url?.startsWith('https://chatgpt.com/')) {
+      if (this.indexing) await this.request({ type: 'indexStop' });
+      this.indexing = false;
+      this.scanGeneration++;
       this.conversationContext = undefined;
       this.showScanProgress = false;
       this.syncing = false;
@@ -80,6 +85,13 @@ class Panel {
     this.tabId = tab.id!;
     const context = `${result.tabId}:${result.id ?? ''}`;
     const contextChanged = context !== this.conversationContext;
+    if (this.conversationContext && contextChanged && this.indexing) {
+      await this.request({ type: 'indexStop' });
+      this.indexing = false;
+      this.scanGeneration++;
+    } else {
+      this.indexing = result.indexing ?? false;
+    }
     if (contextChanged) {
       this.conversationContext = context;
       this.showScanProgress = false;
@@ -101,13 +113,16 @@ class Panel {
             String(this.graph.conversationCount),
             String(this.graph.nodes.filter((node) => node.role !== 'root').length),
           ]));
+    if (result.state?.remainingSource && !result.state.error) {
+      document.querySelector<HTMLElement>('#status')!.textContent += ` · ${this.t('syncMore')}`;
+    }
     if (changed) {
       this.layout = layoutGraph(this.graph);
       if (fitView) this.fit();
       else this.render();
     }
     if (refresh) {
-      await this.request({ type: 'sync', tabId: tab.id });
+      await this.request({ type: 'sync', tabId: tab.id, manual });
       if (generation === this.loadGeneration) await this.load();
     }
   }
@@ -253,7 +268,9 @@ class Panel {
 
   // History scanning and progress display.
   indexStatus(progress?: IndexProgress) {
-    if (this.syncing) {
+    if (progress?.error) {
+      this.scanStatus(this.t('indexError', [translatedError(progress.error, this.t)]));
+    } else if (this.syncing) {
       this.scanStatus(this.t('syncing'));
     } else if (progress && (this.showScanProgress || this.indexing || !progress.done)) {
       const counts = [String(progress.completed), String(progress.total)];
@@ -268,7 +285,13 @@ class Panel {
       this.scanStatus('');
     }
     document.querySelector<HTMLElement>('#index')!.textContent = this.t(
-      this.indexing ? 'indexPause' : progress?.done ? 'indexRestart' : 'indexStart',
+      this.indexing
+        ? 'indexPause'
+        : progress?.done
+          ? 'indexRestart'
+          : progress
+            ? 'indexResume'
+            : 'indexStart',
     );
   }
 
@@ -282,20 +305,22 @@ class Panel {
   async index() {
     if (this.indexing) {
       this.indexing = false;
+      this.scanGeneration++;
+      await this.request({ type: 'indexStop' });
       this.indexStatus((await this.request({ type: 'snapshot' })).index);
       return;
     }
-    const saved = await this.request({ type: 'snapshot' });
-    if (saved.index?.done) await this.request({ type: 'indexReset' });
+    const generation = ++this.scanGeneration;
     this.showScanProgress = true;
     this.indexing = true;
     try {
-      while (this.indexing) {
-        const progress = await this.request<IndexProgress>({ type: 'indexStep' });
-        if (progress.done) this.indexing = false;
-        this.indexStatus(progress);
-      }
+      document.querySelector<HTMLElement>('#index')!.textContent = this.t('indexPause');
+      const progress = await this.request<IndexProgress>({ type: 'indexBatch' });
+      if (generation !== this.scanGeneration) return;
+      this.indexing = false;
+      this.indexStatus(progress);
     } catch (error) {
+      if (generation !== this.scanGeneration) return;
       this.indexing = false;
       document.querySelector<HTMLElement>('#index')!.textContent = this.t('indexResume');
       this.scanStatus(this.t('indexError', [translatedError((error as Error).message, this.t)]));
@@ -432,7 +457,13 @@ function enableWheel(panel: Panel) {
 enableWheel(panel);
 document
   .querySelector<HTMLElement>('#refresh')!
-  .addEventListener('click', () => panel.load(true).catch((error: Error) => panel.error(error)));
+  .addEventListener('click', () =>
+    panel.load(true, true).catch((error: Error) => panel.error(error)),
+  );
+
+document
+  .querySelector('#scan-settings')!
+  .addEventListener('click', () => chrome.runtime.openOptionsPage());
 document
   .querySelector<HTMLElement>('#index')!
   .addEventListener('click', () => panel.index().catch((error: Error) => panel.error(error)));

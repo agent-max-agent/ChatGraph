@@ -18,6 +18,7 @@ class Settings {
   status = '';
   revision = 0;
   language = document.querySelector<HTMLSelectElement>('#language')!;
+  scanInterval = document.querySelector<HTMLSelectElement>('#scan-interval')!;
 
   async render() {
     const revision = ++this.revision;
@@ -58,6 +59,7 @@ class Settings {
     document.querySelector<HTMLElement>('#automatic')!.textContent = t('automatic');
     document.querySelector<HTMLElement>('#hint')!.textContent = t('settingsHint');
     this.language.value = preference;
+    this.scanInterval.value = String(values.scanInterval ?? 4000);
     document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((element) => {
       element.textContent = t(element.dataset.i18n as MessageKey);
     });
@@ -154,6 +156,9 @@ const settings = new Settings();
 settings.language.addEventListener('change', async () => {
   await chrome.storage.local.set({ language: settings.language.value as LanguagePreference });
 });
+settings.scanInterval.addEventListener('change', async () => {
+  await chrome.storage.local.set({ scanInterval: Number(settings.scanInterval.value) });
+});
 document.querySelector('#inspect')!.addEventListener('click', () => {
   settings.inspecting = !settings.inspecting;
   void settings.render();
@@ -166,7 +171,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (
     area === 'local' &&
     Object.keys(changes).some(
-      (key) => key === 'language' || key === 'historyIndex' || key.startsWith('conversation:'),
+      (key) =>
+        key === 'language' ||
+        key === 'scanInterval' ||
+        key === 'historyIndex' ||
+        key.startsWith('conversation:'),
     )
   )
     void settings.render();

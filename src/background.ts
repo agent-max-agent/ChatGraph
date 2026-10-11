@@ -18,14 +18,46 @@ import { readVisibleConversation } from './page-state.js';
 class Coordinator {
   states = new Map<number, TabState>();
   pending = new Map<number, Promise<void>>();
+  requestQueue = Promise.resolve();
+  nextRequestAt = 0;
+  lastIndexRequestAt = -Infinity;
+  scanGeneration = 0;
+  scan?: {
+    tabId: number;
+    id: string | undefined;
+    generation: number;
+    task: Promise<IndexProgress>;
+  };
 
-  async read<T extends PageResult>(tabId: number, request: PageRequest): Promise<T> {
+  async read<T extends PageResult>(
+    tabId: number,
+    request: PageRequest,
+    generation?: number,
+  ): Promise<T> {
+    const task = this.requestQueue.then(() => this.readNext<T>(tabId, request, generation));
+    this.requestQueue = task.then(
+      () => {},
+      () => {},
+    );
+    return task;
+  }
+
+  async readNext<T extends PageResult>(
+    tabId: number,
+    request: PageRequest,
+    generation?: number,
+  ): Promise<T> {
+    const remaining = this.nextRequestAt - Date.now();
+    if (remaining > 0) await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+    if (generation !== undefined && generation !== this.scanGeneration)
+      throw new Error('indexStopped');
     const [execution] = await chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
       func: readChatGPT,
       args: [request],
     });
+    this.nextRequestAt = Date.now() + 500;
     const result = execution.result!;
     if ('error' in result)
       throw Object.assign(new Error(result.error), {
@@ -35,31 +67,45 @@ class Coordinator {
     return result as T;
   }
 
-  async collect(
-    tabId: number,
-    id: string,
-    visited = new Set<string>(),
-    read = (request: PageRequest) => this.read<ConversationData>(tabId, request),
-  ) {
-    if (visited.has(id)) return;
-    visited.add(id);
-    const conversation = projectConversation(await read({ kind: 'conversation', id }));
-    await chrome.storage.local.set({ [`conversation:${id}`]: conversation });
-    if (conversation.fork)
-      await this.collect(tabId, conversation.fork.branchSource!, visited, read);
+  async collect(tabId: number, id: string, sources: boolean) {
+    const visited = new Set<string>();
+    let next: string | undefined = id;
+    let updated = 0;
+    while (next && !visited.has(next)) {
+      if (conversationId((await chrome.tabs.get(tabId)).url!) !== id) return;
+      visited.add(next);
+      const key: string = `conversation:${next}`;
+      const saved = await chrome.storage.local.get<Record<string, Conversation>>(key);
+      let conversation: Conversation = saved[key];
+      if (next === id || !conversation) {
+        if (updated === 10) return next;
+        conversation = projectConversation(
+          await this.read<ConversationData>(tabId, { kind: 'conversation', id: next }),
+        );
+        await chrome.storage.local.set({ [key]: conversation });
+        updated++;
+      }
+      next = conversation.fork?.branchSource ?? undefined;
+      if (!sources) return;
+    }
   }
 
-  async sync(tabId: number) {
+  async sync(tabId: number, manual = false) {
     if (this.pending.has(tabId)) return this.pending.get(tabId);
-    const task = this.refresh(tabId).finally(() => this.pending.delete(tabId));
+    const task = this.refresh(tabId, manual).finally(() => this.pending.delete(tabId));
     this.pending.set(tabId, task);
     return task;
   }
 
-  async refresh(tabId: number) {
+  async refresh(tabId: number, manual = false) {
     const tab = await chrome.tabs.get(tabId);
     const id = conversationId(tab.url!);
-    this.states.set(tabId, { id, loading: true, error: null });
+    const savedState = await chrome.storage.session.get<Record<string, TabState>>(`tab:${tabId}`);
+    const previous = this.states.get(tabId) ?? savedState[`tab:${tabId}`];
+    const changed = previous?.id !== id;
+    if (changed && this.scan?.tabId === tabId) this.stopIndex();
+    let remainingSource = changed ? undefined : previous?.remainingSource;
+    this.states.set(tabId, { id, loading: true, error: null, remainingSource });
     await chrome.storage.session.set({ [`tab:${tabId}`]: this.states.get(tabId) });
     let draft: Conversation | null = null;
     try {
@@ -72,16 +118,23 @@ class Coordinator {
         });
         draft = execution.result!;
       } else if (id) {
-        await this.collect(tabId, id);
+        const remaining = await this.collect(tabId, id, manual || changed);
+        if (manual || changed) remainingSource = remaining;
       }
-      const latest = await chrome.tabs.get(tabId);
-      if (conversationId(latest.url!) !== id) {
-        await this.refresh(tabId);
-        return;
-      }
-      this.states.set(tabId, { id, loading: false, error: null, draft });
+      this.states.set(tabId, { id, loading: false, error: null, draft, remainingSource });
     } catch (error) {
-      this.states.set(tabId, { id, loading: false, error: (error as Error).message, draft });
+      this.states.set(tabId, {
+        id,
+        loading: false,
+        error: (error as Error).message,
+        draft,
+        remainingSource,
+      });
+    }
+    const latest = await chrome.tabs.get(tabId);
+    if (conversationId(latest.url!) !== id) {
+      await this.refresh(tabId, manual);
+      return;
     }
     await chrome.storage.session.set({ [`tab:${tabId}`]: this.states.get(tabId) });
   }
@@ -96,6 +149,7 @@ class Coordinator {
       id: conversationId(tab.url!),
       state: this.states.get(tabId),
       index: values.historyIndex,
+      indexing: this.scan?.generation === this.scanGeneration,
       conversations: [
         ...Object.entries(values)
           .filter(([key]) => key.startsWith('conversation:'))
@@ -105,39 +159,69 @@ class Coordinator {
     };
   }
 
-  async indexStep(tabId: number) {
-    const saved = await chrome.storage.local.get<{ historyIndex?: IndexProgress }>('historyIndex');
-    const progress = saved.historyIndex ?? {
-      offset: 0,
-      ids: [],
-      cursor: 0,
-      completed: 0,
-      total: 0,
-      done: false,
-    };
-    if (progress.done) return progress;
-    try {
-      return await this.advanceIndex(tabId, progress);
-    } catch (error) {
-      if ((error as { status?: number }).status !== 429) throw error;
-      return progress;
-    }
+  stopIndex() {
+    this.scanGeneration++;
   }
 
-  async advanceIndex(tabId: number, progress: IndexProgress) {
+  async indexBatch(tabId: number) {
+    if (this.scan?.generation === this.scanGeneration) return this.scan.task;
+    const generation = ++this.scanGeneration;
+    const id = conversationId((await chrome.tabs.get(tabId)).url!);
+    const previous = this.scan?.task;
+    const task = (previous ?? Promise.resolve()).then(() => this.runIndexBatch(tabId, generation));
+    this.scan = { tabId, id, generation, task };
+    return task.finally(() => {
+      if (generation === this.scanGeneration) this.stopIndex();
+    });
+  }
+
+  async runIndexBatch(tabId: number, generation: number) {
+    const saved = await chrome.storage.local.get<{ historyIndex?: IndexProgress }>('historyIndex');
+    const progress: IndexProgress =
+      !saved.historyIndex?.done && saved.historyIndex
+        ? saved.historyIndex
+        : {
+            offset: 0,
+            ids: [],
+            cursor: 0,
+            completed: 0,
+            total: 0,
+            done: false,
+          };
+    delete progress.error;
+    await chrome.storage.local.set({ historyIndex: progress });
+    try {
+      for (
+        let count = 0;
+        count < 5 && generation === this.scanGeneration && !progress.done;
+        count++
+      ) {
+        await this.advanceIndex(tabId, progress, generation);
+      }
+    } catch (error) {
+      if (generation === this.scanGeneration)
+        progress.error =
+          (error as { status?: number }).status === 429
+            ? 'indexRateLimited'
+            : (error as Error).message;
+    }
+    if (generation === this.scanGeneration) this.stopIndex();
+    await chrome.storage.local.set({ historyIndex: progress });
+    return progress;
+  }
+
+  async advanceIndex(tabId: number, progress: IndexProgress, generation: number) {
     const read = async <T extends PageResult>(request: PageRequest): Promise<T> => {
-      const remaining = (progress.nextRequestAt ?? 0) - Date.now();
+      const saved = await chrome.storage.local.get<{ scanInterval?: number }>('scanInterval');
+      const remaining = this.lastIndexRequestAt + (saved.scanInterval ?? 4000) - Date.now();
       if (remaining > 0) await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+      const id = conversationId((await chrome.tabs.get(tabId)).url!);
+      if (generation !== this.scanGeneration || id !== this.scan!.id)
+        throw new Error('indexStopped');
       try {
-        return await this.read<T>(tabId, request);
-      } catch (error) {
-        if ((error as { status?: number }).status === 429) {
-          progress.requestInterval = (progress.requestInterval ?? 500) * 2;
-        }
-        throw error;
+        return await this.read<T>(tabId, request, generation);
       } finally {
-        progress.nextRequestAt = Date.now() + (progress.requestInterval ?? 500);
-        await chrome.storage.local.set({ historyIndex: progress });
+        this.lastIndexRequestAt = Date.now();
       }
     };
     if (progress.cursor === progress.ids.length) {
@@ -150,10 +234,15 @@ class Coordinator {
       progress.offset += page.ids.length;
       progress.total = page.total;
       if (!page.ids.length) progress.done = true;
+      await chrome.storage.local.set({ historyIndex: progress });
     }
     if (!progress.done) {
       try {
-        await this.collect(tabId, progress.ids[progress.cursor], new Set(), read<ConversationData>);
+        const id = progress.ids[progress.cursor];
+        const conversation = projectConversation(
+          await read<ConversationData>({ kind: 'conversation', id }),
+        );
+        await chrome.storage.local.set({ [`conversation:${id}`]: conversation });
       } catch (error) {
         const failure = error as Error & { status?: number; conversationId: string };
         if (failure.status !== 404) throw error;
@@ -221,14 +310,14 @@ class Coordinator {
     const tabId = (message.tabId ?? sender.tab?.id)!;
     switch (message.type) {
       case 'sync':
-        await this.sync(tabId);
+        await this.sync(tabId, message.manual);
         return this.snapshot(tabId);
       case 'snapshot':
         return this.snapshot(tabId);
-      case 'indexStep':
-        return this.indexStep(tabId);
-      case 'indexReset':
-        await chrome.storage.local.remove('historyIndex');
+      case 'indexBatch':
+        return this.indexBatch(tabId);
+      case 'indexStop':
+        this.stopIndex();
         return {};
       case 'navigate':
         await this.navigate(tabId, message.conversationId, message.messageId);
