@@ -78,7 +78,8 @@ class Panel {
     if (generation !== this.loadGeneration) return;
     this.tabId = tab.id!;
     const context = `${result.tabId}:${result.id ?? ''}`;
-    if (context !== this.conversationContext) {
+    const contextChanged = context !== this.conversationContext;
+    if (contextChanged) {
       this.conversationContext = context;
       this.showScanProgress = false;
     }
@@ -87,6 +88,7 @@ class Panel {
     const fingerprint = JSON.stringify([result.tabId, result.id, result.conversations]);
     const changed = fingerprint !== this.renderedState;
     this.renderedState = fingerprint;
+    const fitView = contextChanged || !this.graph?.nodes.length;
     this.graph = buildGraph(result.conversations, result.id);
     document.querySelector<HTMLElement>('#title')!.textContent =
       this.title(this.graph.title, this.graph.titleKind) || this.t('branches');
@@ -100,10 +102,11 @@ class Panel {
           ]));
     if (changed) {
       this.layout = layoutGraph(this.graph);
-      this.scale = Math.min(
-        1,
-        document.querySelector<HTMLElement>('#viewport')!.clientWidth / this.layout.width,
-      );
+      if (fitView)
+        this.scale = Math.min(
+          1,
+          document.querySelector<HTMLElement>('#viewport')!.clientWidth / this.layout.width,
+        );
       this.render();
     }
     if (refresh) {
@@ -121,6 +124,8 @@ class Panel {
 
   // Graph rendering, selection, and navigation.
   render() {
+    const viewport = document.querySelector<HTMLElement>('#viewport')!;
+    const { scrollLeft, scrollTop } = viewport;
     this.layout = layoutGraph(this.graph);
     const canvas = document.querySelector<HTMLElement>('#canvas')!;
     canvas.style.width = `${this.layout.width}px`;
@@ -182,6 +187,7 @@ class Panel {
         );
       container.append(button);
     }
+    viewport.scrollTo(scrollLeft, scrollTop);
   }
 
   async select(node: GraphNode, button: HTMLButtonElement, tabId: number) {
