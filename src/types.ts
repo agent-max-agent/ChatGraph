@@ -104,6 +104,8 @@ export interface TabState {
 }
 
 export interface IndexProgress {
+  requestInterval?: number;
+  nextRequestAt?: number;
   offset: number;
   ids: string[];
   cursor: number;

@@ -21,6 +21,7 @@ Explore ChatGPT conversation branches as a tree in a Chrome / Edge side panel. C
 - Open ChatGPT's native Versions dialog to locate an older message version within the same conversation.
 - See newly created branches as drafts. Once you send a message and ChatGPT saves the conversation, ChatGraph remembers the branch for later navigation.
 - Scan history to find branches created before installing the extension. Pause and resume the scan, with progress saved locally.
+- History scans automatically slow down after each rate-limit response and continue with saved progress. The reduced rate persists when resuming a scan.
 - Automatically scroll to load messages that are not yet visible before locating them.
 - Read selected messages in a floating bottom preview. Drag its top edge to resize it, or collapse it completely. Reopening restores its previous height while the graph fills the main area.
 - Automatically follow your system's light or dark color scheme, including changes while the side panel is open.
