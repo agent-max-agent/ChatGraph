@@ -66,7 +66,7 @@ export interface GraphNode {
 
 export interface Graph {
   nodes: GraphNode[];
-  edges: { from: string; to: string; kind: 'message' | 'fork' | 'version' }[];
+  edges: { from: string; to: string; kind: 'message' | 'fork' | 'version'; collapsed?: number }[];
   title: string;
   titleKind?: Conversation['titleKind'];
   conversationCount: number;
