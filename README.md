@@ -54,11 +54,7 @@ Sign in to `chatgpt.com`, open a conversation, and click the ChatGraph toolbar i
 
 The interface supports English and Simplified Chinese. It follows your browser language by default. To change it, open ChatGraph's details on the extensions page and select **Extension options**. Your selection is saved locally, and conversation text stays in its original language.
 
-## Data and compatibility
-
-Conversation data and branch relationships are stored locally and are not uploaded to other services. The extension reads data using your current ChatGPT session and does not store access tokens. It relies on ChatGPT's internal APIs, so website updates may require compatibility changes.
-
-## Local development
+## Development
 
 After installing from source, use these commands to check and rebuild your changes:
 
@@ -72,18 +68,53 @@ After changing code, rebuild, reload the extension on the extensions page, and r
 
 `npm run check` checks types and code style; `npm run lint:fix` fixes formatting. Translation catalogs are in `public/_locales/en/messages.json` and `public/_locales/zh_CN/messages.json`.
 
-## Project structure
+### Architecture
 
-- `src/`: TypeScript source for the background worker, page interaction, message tree, and side panel.
-- `public/`: Extension manifest, side-panel HTML, styles, and translations.
-- `scripts/`: Build scripts.
-- `tests/`: Message-tree and localization tests.
-- `docs/images/`: README screenshots.
-- `temp/`: Local temporary files, excluded from the extension.
+ChatGraph follows a modular architecture consisting of four main components:
+
+```text
+ChatGPT Website
+       │
+       ├── content.ts
+       ├── page-api.ts
+       └── page-state.ts
+              │
+              ▼
+         background.ts
+          (Coordinator)
+              │
+              ▼
+           panel.ts
+          (Main panel)
+
+           model.ts
+       (Core algorithm)
+          ↗        ↖
+   background      panel
+```
+
+### Components
+
+- **Content / Page**: Interacts with ChatGPT through DOM observation, API requests, and message navigation.
+- **Background**: Coordinates data synchronization, storage, history indexing, and navigation.
+- **Panel**: Handles user interactions and graph visualization.
+- **Model**: Provides shared algorithms for conversation trees, graph construction, layout, and navigation planning.
+
+### Communication
+
+- `content.ts` communicates with `background.ts` through Chrome runtime messaging.
+- `background.ts` executes functions from `page-api.ts` and `page-state.ts` in the ChatGPT page context.
+- `panel.ts` communicates with `background.ts` through Chrome runtime messaging.
+- Both `background.ts` and `panel.ts` use algorithms from `model.ts`.
+- Chrome Storage persists conversation data and extension state.
 
 ## Authors
 
 Developed by [**Agent Max**](https://github.com/agent-max-agent) (GPT-6.1-Sol) with guidance from [**SaturnTsen**](https://github.com/SaturnTsen).
+
+## Data and compatibility
+
+Conversation data and branch relationships are stored locally and are not uploaded to other services. The extension reads data using your current ChatGPT session and does not store access tokens. It relies on ChatGPT's internal APIs, so website updates may require compatibility changes.
 
 ## License
 
