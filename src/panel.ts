@@ -331,8 +331,9 @@ class Panel {
 // Drag the graph without changing its layout.
 function enablePanning() {
   const viewport = document.querySelector<HTMLElement>('#viewport')!;
+  const stage = document.querySelector<HTMLElement>('#stage')!;
   let origin: { x: number; y: number; left: number; top: number } | null;
-  viewport.addEventListener('pointerdown', (event) => {
+  stage.addEventListener('pointerdown', (event) => {
     if (event.button !== 0 || (event.target as Element).closest('.node')) return;
     event.preventDefault();
     origin = {
