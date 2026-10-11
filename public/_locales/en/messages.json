@@ -44,6 +44,9 @@
   "attachment": {
     "message": "Attachment"
   },
+  "messageContentUnavailable": {
+    "message": "Message content unavailable"
+  },
   "indexProgress": {
     "message": "Scanned $1/$2 conversations"
   },

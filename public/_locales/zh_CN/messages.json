@@ -44,6 +44,9 @@
   "attachment": {
     "message": "附件消息"
   },
+  "messageContentUnavailable": {
+    "message": "消息内容无法显示"
+  },
   "indexProgress": {
     "message": "已扫描 $1/$2 个对话"
   },

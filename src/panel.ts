@@ -168,13 +168,21 @@ class Panel {
       const position = this.layout.positions.get(node.key)!;
       button.style.left = `${position.x}px`;
       button.style.top = `${position.y}px`;
-      const summary = node.text.replace(/\*\*|<[^>]+>/g, '').replace(/\s+/g, ' ');
+      const summary = node.text
+        .replace(/\*\*|<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
       for (const [tag, text] of [
         [
           'strong',
           node.role === 'root' ? this.t('root') : node.role === 'user' ? this.t('you') : 'ChatGPT',
         ],
-        ['span', node.role === 'root' ? this.t('rootSummary') : summary || this.t('attachment')],
+        [
+          'span',
+          node.role === 'root'
+            ? this.t('rootSummary')
+            : summary || this.t(node.hasAttachments ? 'attachment' : 'messageContentUnavailable'),
+        ],
       ]) {
         const element = document.createElement(tag);
         element!.textContent = text;

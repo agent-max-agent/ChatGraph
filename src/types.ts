@@ -5,6 +5,7 @@ export interface MessageNode {
   parent: string | null;
   role: Role;
   text: string;
+  hasAttachments?: boolean;
   branchSource: string | null;
   createdAt?: number;
 }
@@ -25,11 +26,18 @@ export interface RawNode {
   parent: string | null;
   message?: {
     author: { role: string };
+    recipient?: string;
     metadata: {
       is_visually_hidden_from_conversation?: boolean;
       branching_from_conversation_id?: string;
+      attachments?: unknown[];
     };
-    content: { parts?: unknown[] };
+    content: {
+      content_type?: string;
+      parts?: unknown[];
+      thoughts?: { summary: string }[];
+      content?: string;
+    };
     create_time: number;
   } | null;
 }
@@ -46,6 +54,7 @@ export interface GraphNode {
   id: string | null;
   role: Role | 'root';
   text: string;
+  hasAttachments?: boolean;
   conversationTitle: string;
   titleKind?: Conversation['titleKind'];
   conversationId?: string;
