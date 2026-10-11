@@ -160,5 +160,53 @@
   },
   "conversationLoad": {
     "message": "Could not load the conversation ($1). Try again."
+  },
+  "cacheTitle": {
+    "message": "Local cache"
+  },
+  "cacheHint": {
+    "message": "Inspect stored conversations and scan progress. Clearing only removes local data, preserves settings, and stops any current scan."
+  },
+  "cacheInspect": {
+    "message": "Inspect cache"
+  },
+  "cacheClearSelected": {
+    "message": "Clear selected"
+  },
+  "cacheClearAll": {
+    "message": "Clear all"
+  },
+  "cacheEmpty": {
+    "message": "No cached conversations or scan progress."
+  },
+  "cacheSummary": {
+    "message": "$1 entries · $2"
+  },
+  "cacheMessages": {
+    "message": "Messages: $1"
+  },
+  "cacheProgress": {
+    "message": "History scan: $1 / $2"
+  },
+  "cacheSelect": {
+    "message": "Select $1"
+  },
+  "cacheConfirm": {
+    "message": "Clear all local conversations and scan progress? Your settings and ChatGPT conversations will be preserved."
+  },
+  "cacheCleared": {
+    "message": "The cache was cleared. Start a new scan to continue."
+  },
+  "cacheClearComplete": {
+    "message": "Cleared entries: $1."
+  },
+  "cacheBytes": {
+    "message": "$1 B"
+  },
+  "cacheKilobytes": {
+    "message": "$1 KB"
+  },
+  "cacheCollapse": {
+    "message": "Collapse cache"
   }
 }

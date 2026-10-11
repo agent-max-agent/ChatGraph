@@ -3,7 +3,7 @@ body {
   padding: 32px 20px;
 }
 main {
-  max-width: 480px;
+  max-width: 760px;
   margin: auto;
 }
 h1 {
@@ -28,4 +28,49 @@ p {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+section {
+  margin-top: 28px;
+}
+h2 {
+  font-size: 18px;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cache-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cache-row small {
+  display: block;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  margin-top: 5px;
+}
+.cache-row > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.entry-title {
+  overflow-wrap: anywhere;
 }

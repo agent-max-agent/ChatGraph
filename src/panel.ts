@@ -54,7 +54,9 @@ class Panel {
   }
 
   // Background communication and snapshot synchronization.
-  async request<T = Snapshot>(message: CoordinatorMessage): Promise<T> {
+  async request<T = Snapshot>(
+    message: Exclude<CoordinatorMessage, { type: 'cacheClear' }>,
+  ): Promise<T> {
     const result = await chrome.runtime.sendMessage<CoordinatorMessage, T & { error?: string }>({
       ...message,
       tabId: message.tabId ?? this.tabId,
@@ -280,6 +282,11 @@ class Panel {
       }
     } catch (error) {
       this.indexing = false;
+      if ((error as Error).message === 'cacheCleared') {
+        this.showScanProgress = false;
+        this.indexStatus();
+        return;
+      }
       document.querySelector<HTMLElement>('#index')!.textContent = this.t('indexResume');
       this.scanStatus(this.t('indexError', [translatedError((error as Error).message, this.t)]));
     }
@@ -407,6 +414,11 @@ document
   .addEventListener('click', () => panel.zoom(Math.max(0.3, panel.scale - 0.15)));
 document.querySelector<HTMLElement>('#fit')!.addEventListener('click', () => panel.fit());
 chrome.storage.onChanged.addListener((changes) => {
+  if (changes.cacheClearedAt) {
+    panel.indexing = false;
+    panel.showScanProgress = false;
+    panel.indexStatus();
+  }
   if (changes.language) panel.language().catch((error: Error) => panel.error(error));
   if (
     Object.keys(changes).some(

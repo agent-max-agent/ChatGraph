@@ -27,6 +27,14 @@ test('catalogs have matching keys and positional substitutions', () => {
 
 test('persisted error codes translate in the newly selected language and external errors remain readable', () => {
   assert.equal(
+    translatedError('cacheClearComplete|2', createTranslator('en')),
+    'Cleared entries: 2.',
+  );
+  assert.equal(
+    translatedError('cacheClearComplete|2', createTranslator('zh_CN')),
+    '已清除 2 个缓存项。',
+  );
+  assert.equal(
     translatedError('conversationLoad|403', createTranslator('en')),
     'Could not load the conversation (403). Try again.',
   );
