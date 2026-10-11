@@ -118,6 +118,7 @@ h1 {
   position: absolute;
   inset: 0;
   overflow: auto;
+  overflow-anchor: none;
   padding-top: 44px;
   padding-bottom: var(--preview-height);
   background: radial-gradient(var(--grid) 1px, transparent 1px);
