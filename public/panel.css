@@ -56,9 +56,9 @@ header {
   opacity: 0.4;
 }
 .scan-controls:hover,
-.scan-controls:focus-within,
+.scan-controls:has(:focus-visible),
 .zoom-controls:hover,
-.zoom-controls:focus-within,
+.zoom-controls:has(:focus-visible),
 #preview-open:hover,
 #preview-open:focus-visible {
   opacity: 1;
