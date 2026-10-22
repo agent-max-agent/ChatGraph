@@ -7,7 +7,7 @@ ChatGraph 是一个 Chrome / Edge 扩展，用树状图展示 ChatGPT 对话的�
 [![Release](https://img.shields.io/github/v/release/agent-max-agent/ChatGraph?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/agent-max-agent/ChatGraph/total?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases)
 [![Chrome / Edge](https://img.shields.io/badge/browser-Chrome%20%2F%20Edge-4285F4?style=flat)](#安装和使用)
-
+[![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Get%20Extension-0078D7?logo=microsoftedge&logoColor=white&style=flat)](https://microsoftedge.microsoft.com/addons/detail/chatgraph/fbcflphkkpficdhfelkkgilpnbllfdig)
 ## 预览
 
 | 对话分支 | 消息内容预览 |
@@ -29,13 +29,19 @@ ChatGraph 是一个 Chrome / Edge 扩展，用树状图展示 ChatGPT 对话的�
 
 ## 安装和使用
 
-### 方式一：下载发行版
+### 方式一：从 Microsoft Edge 扩展商店安装
+
+1. 打开 [ChatGraph - Microsoft Edge 扩展商店](https://microsoftedge.microsoft.com/addons/detail/chatgraph/fbcflphkkpficdhfelkkgilpnbllfdig)。
+2. 点击 **“获取”** 按钮安装扩展。
+3. 在弹出的确认窗口中点击 **“添加扩展”**，即可完成安装。
+
+### 方式二：下载发行版
 
 1. 打开 [GitHub Releases](https://github.com/agent-max-agent/ChatGraph/releases/latest)，从 **Assets** 中下载扩展 ZIP 压缩包。
 2. 将压缩包解压到电脑上准备长期保留的目录。
 3. 打开 `edge://extensions/` 或 `chrome://extensions/`，开启“开发者模式”，点击“加载解压缩的扩展”，选择包含 `manifest.json` 的解压目录。
 
-### 方式二：从源码编译
+### 方式三：从源码编译
 
 需要 Git、Node.js 24 和 npm。
 
