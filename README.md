@@ -7,6 +7,7 @@ Explore ChatGPT conversation branches as a tree in a Chrome / Edge side panel. C
 [![Release](https://img.shields.io/github/v/release/agent-max-agent/ChatGraph?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/agent-max-agent/ChatGraph/total?style=flat)](https://github.com/agent-max-agent/ChatGraph/releases)
 [![Chrome / Edge](https://img.shields.io/badge/browser-Chrome%20%2F%20Edge-4285F4?style=flat)](#installation)
+[![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Get%20Extension-0078D7?logo=microsoftedge&logoColor=white&style=flat)](https://microsoftedge.microsoft.com/addons/detail/chatgraph/fbcflphkkpficdhfelkkgilpnbllfdig)
 
 ## Preview
 
@@ -29,13 +30,19 @@ A new branch remains a temporary ChatGPT draft until you send a message and the 
 
 ## Installation
 
-### Option 1: Download a release
+### Option 1: Install from Microsoft Edge Add-ons
+
+1. Open [ChatGraph on Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/chatgraph/fbcflphkkpficdhfelkkgilpnbllfdig).
+2. Click **Get** to install the extension.
+3. Confirm by clicking **Add extension**.
+
+### Option 2: Download a release
 
 1. Open [GitHub Releases](https://github.com/agent-max-agent/ChatGraph/releases/latest) and download the extension ZIP from **Assets**.
 2. Extract the ZIP into a folder you will keep on your computer.
 3. Open `edge://extensions/` or `chrome://extensions/`, enable **Developer mode**, and choose **Load unpacked**. Select the extracted folder containing `manifest.json`.
 
-### Option 2: Build from source
+### Option 3: Build from source
 
 Requires Git, Node.js 24, and npm.
 
